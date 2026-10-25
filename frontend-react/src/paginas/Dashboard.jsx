@@ -9,16 +9,16 @@ import '../App.css';
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const [pacientes, setPacientes] = useState(() => {
-    return JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
-  });
+  // Pacientes cargados exclusivamente desde MongoDB Atlas
+  const [pacientes, setPacientes] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
-  // Cargar lista única de pacientes desde la BD en MongoDB
   useEffect(() => {
     let activo = true;
+    setCargando(true);
     obtenerPacientes()
       .then(res => {
-        if (activo && res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (activo && res && res.success && Array.isArray(res.data)) {
           const map = new Map();
           res.data.forEach(p => {
             if (p.expediente && !map.has(p.expediente)) {
@@ -32,12 +32,13 @@ export default function Dashboard() {
               map.set(p.expediente, {
                 expediente: p.expediente,
                 nombre: nombreCompleto,
-                edad: calcEdad,
+                edad: calcEdad !== '—' ? `${calcEdad} años` : '—',
                 telefono: p.telefono || '—',
                 correo: p.correo || '',
                 estado: p.estado || 'Activo',
                 ultimaVisita: p.ultimaVisita || (p.fechaRegistro ? new Date(p.fechaRegistro).toISOString().split('T')[0] : '—'),
-                sexo: p.sexo || 'Otro'
+                sexo: p.sexo || 'Otro',
+                alergias: p.alergias || []
               });
             }
           });
@@ -46,7 +47,10 @@ export default function Dashboard() {
           sessionStorage.setItem('mv_pacientes', JSON.stringify(lista));
         }
       })
-      .catch(err => console.error('Error cargando pacientes:', err));
+      .catch(err => console.error('Error cargando pacientes de MongoDB:', err))
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
     return () => { activo = false; };
   }, []);
 
@@ -56,7 +60,7 @@ export default function Dashboard() {
   const [filtroEdad, setFiltroEdad] = useState('Todos');
   const [orden, setOrden] = useState('reciente');
 
-  // Filtrado reactivo de pacientes
+  // Filtrado reactivo de pacientes de MongoDB
   const pacientesFiltrados = pacientes.filter(p => {
     const matchTexto =
       (p.nombre || '').toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -68,11 +72,13 @@ export default function Dashboard() {
 
     let matchEdad = true;
     const edadNum = parseInt(p.edad, 10);
-    if (filtroEdad === '0-12') matchEdad = edadNum <= 12;
-    else if (filtroEdad === '13-17') matchEdad = edadNum >= 13 && edadNum <= 17;
-    else if (filtroEdad === '18-40') matchEdad = edadNum >= 18 && edadNum <= 40;
-    else if (filtroEdad === '41-65') matchEdad = edadNum >= 41 && edadNum <= 65;
-    else if (filtroEdad === '65+') matchEdad = edadNum > 65;
+    if (!isNaN(edadNum)) {
+      if (filtroEdad === '0-12') matchEdad = edadNum <= 12;
+      else if (filtroEdad === '13-17') matchEdad = edadNum >= 13 && edadNum <= 17;
+      else if (filtroEdad === '18-40') matchEdad = edadNum >= 18 && edadNum <= 40;
+      else if (filtroEdad === '41-65') matchEdad = edadNum >= 41 && edadNum <= 65;
+      else if (filtroEdad === '65+') matchEdad = edadNum > 65;
+    }
 
     return matchTexto && matchEstado && matchSexo && matchEdad;
   }).sort((a, b) => {
@@ -131,8 +137,8 @@ export default function Dashboard() {
             </div>
 
             <div className="info-row">
-              <span className="info-label">Consultorio / Turno</span>
-              <span className="info-value">Cons. 402B · Matutino</span>
+              <span className="info-label">Base de Datos</span>
+              <span className="info-value" style={{ color: 'var(--success)', fontWeight: 700 }}>MongoDB Atlas</span>
             </div>
 
             <hr className="sidebar-divider" />
@@ -171,7 +177,7 @@ export default function Dashboard() {
             <div className="clinical-card search-card">
               <div className="card-title">
                 <span className="icon">🔍</span>
-                <span>Directorio y Búsqueda de Pacientes</span>
+                <span>Directorio y Búsqueda de Pacientes (MongoDB Atlas)</span>
               </div>
 
               <div className="search-bar">
@@ -220,7 +226,7 @@ export default function Dashboard() {
               <div className="records-header">
                 <div className="card-title" style={{ margin: 0 }}>
                   <span className="icon">📋</span>
-                  <span>Pacientes Encontrados</span>
+                  <span>Pacientes en MongoDB Atlas</span>
                 </div>
                 <div className="table-badge">{pacientesFiltrados.length}</div>
               </div>
@@ -243,7 +249,7 @@ export default function Dashboard() {
                       <tr key={`${p.expediente || 'p'}-${idx}`}>
                         <td><strong>{p.expediente}</strong></td>
                         <td>{p.nombre}</td>
-                        <td>{p.edad} años</td>
+                        <td>{p.edad}</td>
                         <td>{p.telefono}</td>
                         <td>
                           <span className={`tag ${p.estado === 'Activo' ? 'tag-accent' : p.estado === 'En tratamiento' ? '' : 'tag-danger'}`}>
@@ -253,6 +259,15 @@ export default function Dashboard() {
                         <td>{p.ultimaVisita || '—'}</td>
                         <td>
                           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn-ver-receta"
+                              style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem', backgroundColor: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }}
+                              onClick={() => navigate(`/consulta/${encodeURIComponent(p.expediente)}`, { state: { paciente: p } })}
+                              title="Iniciar consulta médica para este paciente"
+                            >
+                              🩺 Consulta
+                            </button>
                             <button
                               type="button"
                               className="btn-ver-receta"
@@ -266,7 +281,7 @@ export default function Dashboard() {
                               type="button"
                               className="btn-ver-receta"
                               style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
-                              onClick={() => navigate(`/historial/${idx + 1}`)}
+                              onClick={() => navigate(`/historial/${encodeURIComponent(p.expediente)}`)}
                             >
                               Historial
                             </button>
@@ -277,7 +292,9 @@ export default function Dashboard() {
                     {!pacientesFiltrados.length && (
                       <tr>
                         <td colSpan={7} className="empty-state">
-                          No se encontraron pacientes que coincidan con la búsqueda.
+                          {cargando
+                            ? 'Cargando pacientes desde MongoDB Atlas...'
+                            : 'No se encontraron pacientes registrados en MongoDB Atlas.'}
                         </td>
                       </tr>
                     )}

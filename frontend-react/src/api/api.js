@@ -52,3 +52,17 @@ export async function obtenerCitas(params = {}) {
   const res = await fetch(url);
   return res.json();
 }
+
+export async function guardarConsulta(consultaData) {
+  const res = await fetch(`${API_URL}/consulta/guardar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(consultaData),
+  });
+  return res.json();
+}
+
+export async function obtenerConsultasPorPaciente(pacienteId) {
+  const res = await fetch(`${API_URL}/consultas/${pacienteId}`);
+  return res.json();
+}

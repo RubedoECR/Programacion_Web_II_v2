@@ -1,0 +1,97 @@
+{
+  "usuarios": [
+    {
+      "_id": "6ad9a7813c0a64aa6bcea950",
+      "usuario": "diego.leal@medivoz.com",
+      "email": "diego.leal@medivoz.com",
+      "password": "password123",
+      "nombre": "Dr. Diego Leal",
+      "especialidad": "Medicina General",
+      "cedula": "CED-8492018",
+      "rol": "medico"
+    },
+    {
+      "_id": "6ad9a7813c0a64aa6bcea951",
+      "usuario": "test123",
+      "email": "test@ejemplo.com",
+      "password": "Test@12345",
+      "nombre": "Dr. Test",
+      "especialidad": "Médico General",
+      "rol": "medico"
+    }
+  ],
+  "pacientes": [
+    {
+      "_id": "6ad9a7813c0a64aa6bcea958",
+      "expediente": "EXP-000001",
+      "nombre": "Carlos",
+      "apellidoP": "Gómez",
+      "apellidoM": "Ruiz",
+      "nombreCompleto": "Carlos Gómez Ruiz",
+      "fechaNacimiento": "1985-04-12",
+      "sexo": "Masculino",
+      "telefono": "8119876543",
+      "correo": "carlos.gomez@test.com",
+      "tipoSangre": "O+",
+      "direccion": "Av. Constitución 1234, Monterrey, NL",
+      "alergias": [
+        "Penicilina",
+        "Sulfas"
+      ],
+      "contactoEmergencia": {
+        "nombre": "María Ruiz",
+        "parentesco": "Madre",
+        "telefono": "8111223344"
+      },
+      "estado": "Activo"
+    },
+    {
+      "_id": "6ad9aaa24d82e50284bd24ed",
+      "expediente": "EXP-000002",
+      "nombre": "aaaaa",
+      "apellidoP": "aaaaa",
+      "apellidoM": "aaaaa",
+      "nombreCompleto": "aaaaa aaaaa aaaaa",
+      "fechaNacimiento": "2026-10-01",
+      "sexo": "Femenino",
+      "telefono": "8198765432",
+      "correo": "aaa@aaa.com",
+      "tipoSangre": "A+",
+      "direccion": "aaaaa",
+      "alergias": [
+        "a"
+      ],
+      "contactoEmergencia": {
+        "nombre": "mamá",
+        "parentesco": "madre",
+        "telefono": "8109876543"
+      },
+      "estado": "Activo"
+    },
+    {
+      "_id": "6ada5a144d82e50284bd24ef",
+      "expediente": "EXP-000003",
+      "nombre": "Enfermito",
+      "apellidoP": ":(",
+      "apellidoM": "pippipipi",
+      "nombreCompleto": "Enfermito :( pippipipi",
+      "fechaNacimiento": "2026-10-21",
+      "sexo": "Otro",
+      "telefono": "8133445566",
+      "correo": "enfermo@hotmail.com",
+      "tipoSangre": "",
+      "direccion": "su casita",
+      "alergias": [
+        "Ninguna"
+      ],
+      "contactoEmergencia": {
+        "nombre": "Mamá",
+        "parentesco": "Madre",
+        "telefono": "8198765432"
+      },
+      "estado": "Activo"
+    }
+  ],
+  "consultas": [],
+  "citas": []
+}

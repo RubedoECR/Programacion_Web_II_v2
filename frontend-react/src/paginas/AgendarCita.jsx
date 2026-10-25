@@ -3,28 +3,22 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
 import { agendarCita, obtenerPacientes, obtenerDoctores } from '../api/api';
 
-const DOCTORES_RESPALDO = [
-  { id: '1', nombre: 'Doctor Amor Amoroso', especialidad: 'Cardiologia' },
-  { id: '2', nombre: 'Dr. Test', especialidad: 'Médico General' },
-  { id: '3', nombre: 'Dr. Diego Leal', especialidad: 'Medicina General' }
-];
-
 export default function AgendarCita() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Pacientes y doctores cargados dinámicamente desde MongoDB Atlas (con respaldo inmediato para evitar selectores vacíos)
+  // Pacientes y doctores cargados exclusivamente desde MongoDB Atlas
   const [pacientes, setPacientes] = useState([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState('');
-  const [doctores, setDoctores] = useState(DOCTORES_RESPALDO);
+  const [doctores, setDoctores] = useState([]);
 
   const [form, setForm] = useState({
     pacienteExpediente: '',
     nombre: '',
     telefono: '',
     correo: '',
-    especialidad: DOCTORES_RESPALDO[0].especialidad,
-    doctor: DOCTORES_RESPALDO[0].nombre,
+    especialidad: 'Medicina General',
+    doctor: '',
     fecha: '',
     hora: '09:00',
     duracionMinutos: 30,
@@ -35,7 +29,7 @@ export default function AgendarCita() {
   const [cargando, setCargando] = useState(false);
   const [errorEmpalme, setErrorEmpalme] = useState(null);
 
-  // Cargar lista de doctores reales desde MongoDB Atlas
+  // Cargar lista de doctores reales exclusivamente desde MongoDB Atlas
   useEffect(() => {
     let activo = true;
     obtenerDoctores()
@@ -49,7 +43,7 @@ export default function AgendarCita() {
               return {
                 ...prev,
                 doctor: primerDoc.nombre,
-                especialidad: primerDoc.especialidad || prev.especialidad
+                especialidad: primerDoc.especialidad || 'Medicina General'
               };
             }
             return prev;
@@ -57,13 +51,13 @@ export default function AgendarCita() {
         }
       })
       .catch(err => {
-        console.warn('Usando doctores de respaldo ante error de red:', err);
+        console.error('Error cargando doctores desde MongoDB:', err);
       });
 
     return () => { activo = false; };
   }, []);
 
-  // Cargar lista de pacientes para agendar directamente seleccionando paciente
+  // Cargar lista de pacientes exclusivamente desde MongoDB Atlas
   useEffect(() => {
     obtenerPacientes()
       .then(res => {
@@ -165,7 +159,7 @@ export default function AgendarCita() {
           <div className="auth-header">
             <div className="auth-logo-badge">📅</div>
             <h1>Agendar Cita Médica</h1>
-            <p>Programa consultas para pacientes sin traslapes ni empalmes de horario</p>
+            <p>Programa consultas para pacientes en MongoDB Atlas sin empalmes</p>
           </div>
 
           {!confirmada ? (
@@ -193,7 +187,7 @@ export default function AgendarCita() {
               {/* Selector de paciente registrado */}
               {pacientes.length > 0 && (
                 <div className="form-group">
-                  <label>Seleccionar Paciente Registrado (Opcional)</label>
+                  <label>Seleccionar Paciente Registrado de MongoDB</label>
                   <select
                     value={pacienteSeleccionado}
                     onChange={e => handleSelectPaciente(e.target.value)}
@@ -243,7 +237,7 @@ export default function AgendarCita() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="form-group">
-                  <label>Médico Asignado</label>
+                  <label>Médico Asignado (MongoDB)</label>
                   <select
                     value={form.doctor}
                     onChange={e => handleDoctorChange(e.target.value)}

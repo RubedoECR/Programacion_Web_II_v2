@@ -6,6 +6,7 @@ import LoginPaciente from './paginas/LoginPaciente';
 import Registro from './paginas/Registro';
 import RegistroPaciente from './paginas/RegistroPaciente';
 import Dashboard from './paginas/Dashboard';
+import Dashboard1 from './paginas/dashboard1';
 import PacienteNuevo from './paginas/PacienteNuevo';
 import AgendarCita from './paginas/AgendarCita';
 import Consulta from './paginas/Consulta';
@@ -23,6 +24,16 @@ export default function App() {
           <Route path="/registro" element={<Registro />} />
           <Route path="/registro-paciente" element={<RegistroPaciente />} />
           <Route path="/dashboard" element={
+            <RutaProtegida rolPermitido="medico">
+              <Dashboard1 />
+            </RutaProtegida>
+          } />
+          <Route path="/dashboard1" element={
+            <RutaProtegida rolPermitido="medico">
+              <Dashboard1 />
+            </RutaProtegida>
+          } />
+          <Route path="/pacientes" element={
             <RutaProtegida rolPermitido="medico">
               <Dashboard />
             </RutaProtegida>
