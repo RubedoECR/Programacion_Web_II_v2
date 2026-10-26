@@ -135,11 +135,13 @@ async function sincronizarDesdeAtlas() {
     const patients = await rawCollections.patients.find({}).toArray();
     const consultas = await rawCollections.consultas.find({}).toArray();
     const citas = await rawCollections.citas.find({}).toArray();
+    const recetas = await rawCollections.recetas.find({}).toArray();
 
     if (users.length > 0) memoriaCache.usuarios = users;
     if (patients.length > 0) memoriaCache.pacientes = patients;
     if (consultas.length > 0) memoriaCache.consultas = consultas;
     if (citas.length > 0) memoriaCache.citas = citas;
+    if (recetas.length > 0) memoriaCache.recetas = recetas;
 
     guardarCache(memoriaCache);
     console.log('🔄 Caché local sincronizada con MongoDB Atlas con éxito');
@@ -174,6 +176,7 @@ function programarReintento() {
       rawCollections.patients = db.collection('pacientes');
       rawCollections.consultas = db.collection('consultas');
       rawCollections.citas = db.collection('citas');
+    rawCollections.recetas = db.collection('recetas');
 
       isConnected = true;
       isReconnecting = false;
@@ -373,7 +376,8 @@ const resilientCollections = {
   users: crearColeccionResiliente('usuarios'),
   patients: crearColeccionResiliente('pacientes'),
   consultas: crearColeccionResiliente('consultas'),
-  citas: crearColeccionResiliente('citas')
+  citas: crearColeccionResiliente('citas'),
+  recetas: crearColeccionResiliente('recetas')
 };
 
 const getCollections = () => resilientCollections;
