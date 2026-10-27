@@ -1,29 +1,60 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { obtenerDoctorPorId } from '../api/api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  // Inicializa con la sesión guardada en localStorage o null si no hay sesión
   const [usuario, setUsuario] = useState(() => {
     const sesionGuardada = localStorage.getItem('usuarioActual');
     if (sesionGuardada) {
       try {
         return JSON.parse(sesionGuardada);
       } catch (e) {
-        // Ignorar error de parsing
+        console.error('Error parseando sesion de localStorage:', e);
       }
     }
-    // Sesión médica activa por defecto para navegación inmediata y soporte de atajos
-    return {
-      id: 'doc-diego-leal',
-      nombre: 'Dr. Diego Leal',
-      usuario: 'diego.leal@medivoz.com',
-      especialidad: 'Medicina General',
-      rol: 'medico'
-    };
+    return null;
   });
 
+  const [cargandoSesion, setCargandoSesion] = useState(false);
+
+  // Sincronizar / revalidar datos del médico con MongoDB si hay sesión activa
+  useEffect(() => {
+    if (!usuario?.id) return;
+    let activo = true;
+
+    obtenerDoctorPorId(usuario.id)
+      .then(res => {
+        if (activo && res && res.success && res.data) {
+          const docActualizado = {
+            ...usuario,
+            ...res.data,
+            rol: usuario.rol || 'medico'
+          };
+          setUsuario(docActualizado);
+          localStorage.setItem('usuarioActual', JSON.stringify(docActualizado));
+        }
+      })
+      .catch(err => {
+        // Si no responde o está offline, se conserva la sesión local existente
+        console.warn('No se pudo revalidar sesión con MongoDB Atlas:', err.message);
+      });
+
+    return () => { activo = false; };
+  }, [usuario?.id]);
+
   function iniciarSesion(datos, rol = 'medico') {
-    const sesion = { ...datos, rol };
+    const sesion = {
+      id: datos.id || datos._id,
+      nombre: datos.nombre || 'Doctor',
+      usuario: datos.usuario || datos.email || '',
+      especialidad: datos.especialidad || 'Medicina General',
+      cedula: datos.cedula || '',
+      email: datos.email || datos.correo || '',
+      telefono: datos.telefono || '',
+      rol
+    };
     localStorage.setItem('usuarioActual', JSON.stringify(sesion));
     setUsuario(sesion);
   }
@@ -34,7 +65,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, iniciarSesion, cerrarSesion }}>
+    <AuthContext.Provider value={{ usuario, iniciarSesion, cerrarSesion, cargandoSesion }}>
       {children}
     </AuthContext.Provider>
   );
