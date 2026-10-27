@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
 import HeaderClinico from '../componentes/HeaderClinico';
-import { obtenerPacientes, obtenerConsultasPorPaciente } from '../api/api';
+import { obtenerPacientes, obtenerConsultasPorPaciente, obtenerRecetaPorId, obtenerConsultaPorId, actualizarReceta } from '../api/api';
+import { useAuth } from '../auth/AuthContext';
 import '../App.css';
 
 export default function Receta() {
@@ -161,8 +162,8 @@ export default function Receta() {
         <div className="receta-hoja">
           <div className="receta-header">
             <div>
-              <div className="receta-doctor-nombre">{recetaData.medico || 'Dr. Diego Leal'}</div>
-              <div className="receta-doctor-detalle">{recetaData.cedula || 'Médico Cirujano · Céd. Prof. 8492018'}</div>
+              <div className="receta-doctor-nombre">{recetaData.medico || usuario?.nombre || 'Doctor'}</div>
+              <div className="receta-doctor-detalle">{recetaData.cedula || (usuario?.cedula ? `Céd. ${usuario.cedula}` : 'Médico Cirujano')}</div>
             </div>
             <div className="receta-folio">
               <div><strong>Folio:</strong> MV-{String(recetaData.id).slice(-5).padStart(5, '0')}</div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import NavTemporal from '../componentes/NavTemporal';
 import HeaderClinico from '../componentes/HeaderClinico';
 import { obtenerPacientes, guardarConsulta, obtenerConsultasPorPaciente } from '../api/api';
@@ -78,13 +79,19 @@ export default function Consulta() {
     return JSON.parse(sessionStorage.getItem('mv_registros') || '[]');
   });
 
+  useEffect(() => {
+    if (usuario?.nombre) {
+      setForm(prev => ({ ...prev, medico: usuario.nombre }));
+    }
+  }, [usuario?.nombre]);
+
   // Pestaña de historial en la parte inferior ('paciente' o 'todos')
   const [tabHistorial, setTabHistorial] = useState('paciente');
 
   // Estado del formulario clínico
   const [form, setForm] = useState({
     paciente: '',
-    medico: 'Dr. Diego Leal',
+    medico: usuario?.nombre || 'Doctor',
     fecha: hoyISO(),
     hora: horaActual(),
     tipoConsulta: 'Consulta general',
@@ -482,7 +489,11 @@ export default function Consulta() {
         pacienteId: pacienteActual.expediente,
         pacienteExpediente: pacienteActual.expediente,
         pacienteNombre: pacienteActual.nombre,
-        medico: form.medico,
+        medico: form.medico || usuario?.nombre || 'Doctor',
+        medicoId: usuario?.id || '',
+        cedula: usuario?.cedula || '',
+        especialidad: usuario?.especialidad || 'Medicina General',
+        citaId: citaPrevia?.id || null,
         tipoConsulta: form.tipoConsulta,
         categoria: form.categoria,
         severidad: form.severidad,
@@ -620,7 +631,7 @@ export default function Consulta() {
                     <span className="expediente-badge">{pacienteActual.expediente}</span>
                   </h2>
                   <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                    Médico responsable: <strong>{form.medico}</strong> · Céd. CED-8492018 · Medicina General
+                    Médico responsable: <strong>{form.medico || usuario?.nombre || "Doctor"}</strong> · {usuario?.cedula ? `Céd. ${usuario.cedula}` : "Sin cédula"} · {usuario?.especialidad || "Medicina General"}
                   </div>
                 </div>
               </div>

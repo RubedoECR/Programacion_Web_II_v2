@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../auth/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
 import { obtenerPacientes } from '../api/api';
@@ -109,8 +110,8 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="sidebar-name">Dr. Diego Leal</div>
-            <div className="sidebar-role">Medicina General · Hospital San Lucas</div>
+            <div className="sidebar-name">{usuario?.nombre || "Doctor"}</div>
+            <div className="sidebar-role">{(usuario?.especialidad || "Medicina General") + " · Hospital San Lucas"}</div>
 
             <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
               <span className="status-pill">
@@ -123,17 +124,17 @@ export default function Dashboard() {
 
             <div className="info-row">
               <span className="info-label">Cédula Profesional</span>
-              <span className="info-value">CED-8492018</span>
+              <span className="info-value">{usuario?.cedula || "No registrada"}</span>
             </div>
 
             <div className="info-row">
               <span className="info-label">Correo Institucional</span>
-              <span className="info-value">diego.leal@medivoz.com</span>
+              <span className="info-value">{usuario?.email || usuario?.usuario || "—"}</span>
             </div>
 
             <div className="info-row">
               <span className="info-label">Teléfono de consultorio</span>
-              <span className="info-value">+52 (81) 8345-6789</span>
+              <span className="info-value">{usuario?.telefono || "—"}</span>
             </div>
 
             <div className="info-row">
