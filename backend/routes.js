@@ -30,6 +30,12 @@ function horaAMinutos(horaStr) {
   return horas * 60 + minutos;
 }
 
+// Helper para parsear ObjectId de forma segura
+function toObjectId(id) {
+  if (!id) return null;
+  return ObjectId.isValid(id) ? new ObjectId(id) : null;
+}
+
 // =====================================
 // AUTENTICACIÓN Y USUARIOS / DOCTORES
 // =====================================
@@ -61,15 +67,20 @@ router.post('/login', validarLogin, async (req, res) => {
       });
     }
 
+    const nombreCompleto = [user.nombre, user.apellidoP, user.apellidoM].filter(Boolean).join(' ').trim() || user.nombre || 'Doctor';
+
     res.status(200).json({
       success: true,
       message: 'Inicio de sesión exitoso',
       data: {
         id: user._id,
-        nombre: user.nombre,
+        nombre: nombreCompleto,
         usuario: user.usuario,
-        especialidad: user.especialidad,
-        email: user.email
+        especialidad: user.especialidad || 'Medicina General',
+        cedula: user.cedula || '',
+        email: user.email || user.correo || '',
+        telefono: user.telefono || '',
+        rol: user.rol || 'medico'
       }
     });
   } catch (error) {
@@ -105,7 +116,9 @@ router.post('/register', validarRegistroMedico, async (req, res) => {
         usuario: newUser.usuario,
         nombre: `${newUser.nombre} ${newUser.apellidoP}`.trim(),
         email: newUser.email,
-        especialidad: newUser.especialidad
+        especialidad: newUser.especialidad,
+        cedula: newUser.cedula,
+        rol: newUser.rol
       }
     });
   } catch (error) {
@@ -126,7 +139,9 @@ router.get('/doctores', async (req, res) => {
         nombre: nombreCompleto,
         especialidad: d.especialidad || 'Medicina General',
         email: d.email || d.correo || '',
-        cedula: d.cedula || ''
+        cedula: d.cedula || '',
+        telefono: d.telefono || '',
+        usuario: d.usuario || ''
       };
     });
     res.json({
@@ -135,6 +150,46 @@ router.get('/doctores', async (req, res) => {
     });
   } catch (error) {
     console.error('Error obteniendo doctores:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+// GET /api/doctores/:id
+router.get('/doctores/:id', async (req, res) => {
+  try {
+    const { users } = getCollections();
+    const { id } = req.params;
+    const objId = toObjectId(id);
+
+    const doc = await users.findOne({
+      $or: [
+        ...(objId ? [{ _id: objId }] : []),
+        { _id: id },
+        { usuario: id },
+        { email: id }
+      ]
+    });
+
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Doctor no encontrado' });
+    }
+
+    const nombreCompleto = [doc.nombre, doc.apellidoP, doc.apellidoM].filter(Boolean).join(' ').trim() || doc.nombre || 'Doctor';
+
+    res.json({
+      success: true,
+      data: {
+        id: doc._id,
+        nombre: nombreCompleto,
+        especialidad: doc.especialidad || 'Medicina General',
+        cedula: doc.cedula || '',
+        email: doc.email || doc.correo || '',
+        telefono: doc.telefono || '',
+        usuario: doc.usuario || ''
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo doctor por id:', error);
     res.status(500).json({ success: false, message: 'Error en el servidor' });
   }
 });
@@ -198,6 +253,35 @@ router.get('/pacientes', async (req, res) => {
   }
 });
 
+// GET /api/pacientes/:identificador (por expediente o por _id)
+router.get('/pacientes/:identificador', async (req, res) => {
+  try {
+    const { patients } = getCollections();
+    const { identificador } = req.params;
+    const objId = toObjectId(identificador);
+
+    const paciente = await patients.findOne({
+      $or: [
+        { expediente: identificador },
+        ...(objId ? [{ _id: objId }] : []),
+        { _id: identificador }
+      ]
+    });
+
+    if (!paciente) {
+      return res.status(404).json({ success: false, message: 'Paciente no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      data: paciente
+    });
+  } catch (error) {
+    console.error('Error obteniendo paciente:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
 // =====================================
 // CONSULTAS
 // =====================================
@@ -205,15 +289,49 @@ router.get('/pacientes', async (req, res) => {
 // POST /api/consulta/guardar
 router.post('/consulta/guardar', validarConsulta, async (req, res) => {
   try {
-    const { consultas } = getCollections();
+    const { consultas, citas, recetas } = getCollections();
     const newConsulta = createConsultaSchema(req.body);
     const result = await consultas.insertOne(newConsulta);
+    const consultaId = result.insertedId;
+
+    // Si viene asociada a una cita, marcar la cita como 'Atendida'
+    if (req.body.citaId) {
+      const citaObjId = toObjectId(req.body.citaId);
+      await citas.updateOne(
+        { $or: [...(citaObjId ? [{ _id: citaObjId }] : []), { _id: req.body.citaId }] },
+        { $set: { estado: 'Atendida', consultaId: consultaId, fechaAtendida: new Date() } }
+      );
+    }
+
+    // Si la consulta incluye medicamentos, crear automáticamente la receta correspondiente
+    let recetaId = null;
+    if (Array.isArray(newConsulta.medicamentos) && newConsulta.medicamentos.length > 0) {
+      const nuevaReceta = {
+        consultaId: consultaId,
+        pacienteId: newConsulta.pacienteId || '',
+        pacienteExpediente: newConsulta.pacienteExpediente || '',
+        pacienteNombre: newConsulta.pacienteNombre || '',
+        medico: newConsulta.medico || '',
+        medicoId: req.body.medicoId || '',
+        cedula: req.body.cedula || '',
+        especialidad: req.body.especialidad || 'Medicina General',
+        diagnosticos: newConsulta.diagnosticos || [],
+        medicamentos: newConsulta.medicamentos || [],
+        alergias: newConsulta.alergias || [],
+        notas: newConsulta.notas || '',
+        fecha: newConsulta.fecha || new Date(),
+        fechaCreacion: new Date()
+      };
+      const resReceta = await recetas.insertOne(nuevaReceta);
+      recetaId = resReceta.insertedId;
+    }
 
     res.status(201).json({
       success: true,
       message: 'Consulta guardada exitosamente',
       data: {
-        id: result.insertedId
+        id: consultaId,
+        recetaId: recetaId
       }
     });
   } catch (error) {
@@ -222,6 +340,34 @@ router.post('/consulta/guardar', validarConsulta, async (req, res) => {
       success: false,
       message: 'Error en el servidor'
     });
+  }
+});
+
+// GET /api/consulta/:id (Obtener una consulta específica por ID)
+router.get('/consulta/:id', async (req, res) => {
+  try {
+    const { consultas } = getCollections();
+    const { id } = req.params;
+    const objId = toObjectId(id);
+
+    const consulta = await consultas.findOne({
+      $or: [
+        ...(objId ? [{ _id: objId }] : []),
+        { _id: id }
+      ]
+    });
+
+    if (!consulta) {
+      return res.status(404).json({ success: false, message: 'Consulta no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      data: consulta
+    });
+  } catch (error) {
+    console.error('Error obteniendo consulta por id:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
   }
 });
 
@@ -254,6 +400,123 @@ router.get('/consultas/:pacienteId', async (req, res) => {
 });
 
 // =====================================
+// RECETAS MÉDICAS
+// =====================================
+
+// GET /api/recetas
+router.get('/recetas', async (req, res) => {
+  try {
+    const { recetas } = getCollections();
+    const { pacienteExpediente, medico } = req.query;
+    const filtro = {};
+    if (pacienteExpediente) filtro.pacienteExpediente = pacienteExpediente;
+    if (medico) filtro.medico = medico;
+
+    const listaRecetas = await recetas.find(filtro).sort({ fecha: -1 }).toArray();
+    res.json({
+      success: true,
+      data: listaRecetas
+    });
+  } catch (error) {
+    console.error('Error obteniendo recetas:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor al obtener recetas' });
+  }
+});
+
+// GET /api/receta/:id (Por ID de receta, por ID de consulta, o por expediente)
+router.get('/receta/:id', async (req, res) => {
+  try {
+    const { recetas, consultas, patients } = getCollections();
+    const { id } = req.params;
+    const objId = toObjectId(id);
+
+    // 1. Buscar directamente en la colección 'recetas'
+    let receta = await recetas.findOne({
+      $or: [
+        ...(objId ? [{ _id: objId }, { consultaId: objId }] : []),
+        { _id: id },
+        { consultaId: id },
+        { pacienteExpediente: id }
+      ]
+    });
+
+    // 2. Si no existe en recetas, buscar si existe como 'consulta' y construir los datos de la receta
+    if (!receta) {
+      const consulta = await consultas.findOne({
+        $or: [
+          ...(objId ? [{ _id: objId }] : []),
+          { _id: id },
+          { pacienteExpediente: id }
+        ]
+      });
+
+      if (consulta) {
+        receta = {
+          _id: consulta._id,
+          consultaId: consulta._id,
+          pacienteId: consulta.pacienteId || '',
+          pacienteExpediente: consulta.pacienteExpediente || '',
+          pacienteNombre: consulta.pacienteNombre || '',
+          medico: consulta.medico || '',
+          diagnosticos: consulta.diagnosticos || [],
+          medicamentos: consulta.medicamentos || [],
+          alergias: consulta.alergias || [],
+          notas: consulta.notas || '',
+          fecha: consulta.fecha || new Date()
+        };
+      }
+    }
+
+    if (!receta) {
+      return res.status(404).json({ success: false, message: 'Receta no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      data: receta
+    });
+  } catch (error) {
+    console.error('Error obteniendo receta:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor al obtener receta' });
+  }
+});
+
+// PUT /api/receta/:id (Guardar o editar modificaciones a una receta)
+router.put('/receta/:id', async (req, res) => {
+  try {
+    const { recetas } = getCollections();
+    const { id } = req.params;
+    const objId = toObjectId(id);
+
+    const filtro = {
+      $or: [
+        ...(objId ? [{ _id: objId }, { consultaId: objId }] : []),
+        { _id: id },
+        { consultaId: id }
+      ]
+    };
+
+    const updateData = {
+      ...req.body,
+      fechaActualizacion: new Date()
+    };
+    delete updateData._id;
+
+    const result = await recetas.updateOne(filtro, { $set: updateData });
+
+    res.json({
+      success: true,
+      message: 'Receta actualizada exitosamente',
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Error actualizando receta:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor al actualizar receta' });
+  }
+});
+
+// =====================================
 // CITAS MÉDICAS
 // =====================================
 
@@ -261,8 +524,14 @@ router.get('/consultas/:pacienteId', async (req, res) => {
 router.get('/citas', async (req, res) => {
   try {
     const { citas } = getCollections();
-    const { pacienteExpediente, fecha, doctor } = req.query;
-    const filtro = { estado: { $ne: 'Cancelada' } };
+    const { pacienteExpediente, fecha, doctor, estado } = req.query;
+    const filtro = {};
+
+    if (estado) {
+      filtro.estado = estado;
+    } else {
+      filtro.estado = { $ne: 'Cancelada' };
+    }
 
     if (pacienteExpediente) filtro.pacienteExpediente = pacienteExpediente;
     if (fecha) filtro.fecha = fecha;
@@ -276,6 +545,51 @@ router.get('/citas', async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo citas:', error);
     res.status(500).json({ success: false, message: 'Error en el servidor al obtener citas' });
+  }
+});
+
+// GET /api/citas/paciente/:expediente
+router.get('/citas/paciente/:expediente', async (req, res) => {
+  try {
+    const { citas } = getCollections();
+    const { expediente } = req.params;
+
+    const listaCitas = await citas
+      .find({ pacienteExpediente: expediente, estado: { $ne: 'Cancelada' } })
+      .sort({ fecha: 1, hora: 1 })
+      .toArray();
+
+    res.json({
+      success: true,
+      data: listaCitas
+    });
+  } catch (error) {
+    console.error('Error obteniendo citas del paciente:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+// GET /api/citas/doctor/:doctor
+router.get('/citas/doctor/:doctor', async (req, res) => {
+  try {
+    const { citas } = getCollections();
+    const { doctor } = req.params;
+
+    const listaCitas = await citas
+      .find({
+        $or: [{ doctor: doctor }, { doctorId: doctor }],
+        estado: { $ne: 'Cancelada' }
+      })
+      .sort({ fecha: 1, hora: 1 })
+      .toArray();
+
+    res.json({
+      success: true,
+      data: listaCitas
+    });
+  } catch (error) {
+    console.error('Error obteniendo citas del doctor:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
   }
 });
 
@@ -363,9 +677,10 @@ router.patch('/citas/:id/cancelar', async (req, res) => {
   try {
     const { citas } = getCollections();
     const { id } = req.params;
+    const objId = toObjectId(id);
 
     await citas.updateOne(
-      { _id: new ObjectId(id) },
+      { $or: [...(objId ? [{ _id: objId }] : []), { _id: id }] },
       { $set: { estado: 'Cancelada', fechaCancelacion: new Date() } }
     );
     res.json({ success: true, message: 'Cita cancelada con éxito' });
@@ -374,11 +689,28 @@ router.patch('/citas/:id/cancelar', async (req, res) => {
   }
 });
 
+// PATCH /api/citas/:id/atender
+router.patch('/citas/:id/atender', async (req, res) => {
+  try {
+    const { citas } = getCollections();
+    const { id } = req.params;
+    const objId = toObjectId(id);
+
+    await citas.updateOne(
+      { $or: [...(objId ? [{ _id: objId }] : []), { _id: id }] },
+      { $set: { estado: 'Atendida', fechaAtendida: new Date() } }
+    );
+    res.json({ success: true, message: 'Cita marcada como atendida' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error actualizando cita' });
+  }
+});
+
 // GET /api/test
 router.get('/test', (req, res) => {
   res.json({
     success: true,
-    message: ' Servidor funcionando correctamente'
+    message: 'Servidor funcionando correctamente'
   });
 });
 
