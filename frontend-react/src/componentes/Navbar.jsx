@@ -25,6 +25,9 @@ export default function Navbar() {
   return (
     <nav className="temp-nav no-print" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem' }}>
+        <span style={{ fontSize: '0.7rem', background: '#0284c7', color: 'white', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 700, marginRight: '0.2rem' }}>
+          v2.0
+        </span>
         {RUTAS.map((r) => (
           <NavLink key={r.to} to={r.to} end style={({ isActive }) => ({ fontWeight: isActive ? 700 : 400 })}>
             {r.texto}
