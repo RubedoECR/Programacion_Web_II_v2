@@ -1,6 +1,7 @@
+// Encabezado institucional que aparece en las páginas del sistema.
 import { Link } from 'react-router-dom';
 
-export default function HeaderClinico({ showBack = false, backUrl = '/dashboard', backText = 'Regresar' }) {
+export default function HeaderClinico() {
   return (
     <header className="institutional-header">
       <div className="container-logo">
