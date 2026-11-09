@@ -1,16 +1,33 @@
-# React + Vite
+# MediVoz — Frontend (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Estructura
 
-Currently, two official plugins are available:
+```
+src/
+├── main.jsx / App.jsx
+├── router/AppRouter.jsx      Router del navegador (rutas públicas y protegidas)
+├── context/                  Sesión del médico (token JWT + datos del usuario)
+├── api/                      1 archivo por recurso; cliente.js agrega el token a cada petición
+├── componentes/              Navbar, HeaderClinico, RutaProtegida
+├── paginas/
+│   ├── auth/                 Login, Registro
+│   ├── citas/                Agenda, AgendarCita
+│   ├── pacientes/            Pacientes, PacienteNuevo, Historial
+│   ├── consultas/            Consulta (dictado por voz)
+│   └── recetas/              Receta
+├── utils/formato.js          Fechas, nombres y adaptadores de datos
+└── estilos/                  CSS
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Instalación
 
-## React Compiler
+```bash
+cd frontend-react
+npm install
+cp .env.example .env      # en Windows: copy .env.example .env
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+`VITE_API_URL` apunta al backend (por defecto `http://localhost:3000/api`).
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Sin sesión solo se puede entrar a `/login` y `/registro`; cualquier otra ruta redirige al login.
