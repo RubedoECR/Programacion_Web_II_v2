@@ -1,18 +1,8 @@
 {
   "info": {
     "name": "MediVoz API",
-    "description": "Colección completa del API de MediVoz. Ejecuta primero 'Auth > Login': guarda el token y todas las demás peticiones lo usan.",
+    "description": "Ejecuta primero 'Auth > Login médico' y 'Auth > Login paciente': guardan los tokens que usan las demás peticiones.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{token}}",
-        "type": "string"
-      }
-    ]
   },
   "variable": [
     {
@@ -20,7 +10,11 @@
       "value": "http://localhost:3000/api"
     },
     {
-      "key": "token",
+      "key": "tokenMedico",
+      "value": ""
+    },
+    {
+      "key": "tokenPaciente",
       "value": ""
     },
     {
@@ -46,6 +40,10 @@
     {
       "key": "medicamentoId",
       "value": ""
+    },
+    {
+      "key": "fecha",
+      "value": "2026-11-12"
     }
   ],
   "item": [
@@ -53,7 +51,7 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Login",
+          "name": "Registro de paciente",
           "request": {
             "method": "POST",
             "header": [
@@ -63,18 +61,79 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/auth/login",
+              "raw": "{{baseUrl}}/auth/paciente/registro",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "auth",
+                "paciente",
+                "registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Sofía\",\n  \"apellidoP\": \"Reyes\",\n  \"apellidoM\": \"Luna\",\n  \"fechaNacimiento\": \"2000-05-05\",\n  \"sexo\": \"Femenino\",\n  \"telefono\": \"8111112222\",\n  \"correo\": \"sofia.postman@correo.com\",\n  \"password\": \"Sofia@2026\",\n  \"tipoSangre\": \"O+\",\n  \"alergias\": \"Polen\",\n  \"contactoNombre\": \"Rosa Luna\",\n  \"contactoParentesco\": \"Madre\",\n  \"contactoTelefono\": \"8199998888\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Registro de paciente (validación → 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/paciente/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "paciente",
+                "registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"correo\": \"malo\",\n  \"password\": \"123\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Login paciente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/paciente/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "paciente",
                 "login"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usuario\": \"diego.leal@medivoz.com\",\n  \"password\": \"Medivoz@2026\"\n}"
+              "raw": "{\n  \"correo\": \"sofia.postman@correo.com\",\n  \"password\": \"Sofia@2026\"\n}"
             },
             "auth": {
               "type": "noauth"
@@ -88,41 +147,12 @@
                 "exec": [
                   "const r = pm.response.json();",
                   "pm.test('Login correcto', () => pm.expect(r.success).to.be.true);",
-                  "pm.collectionVariables.set('token', r.data.token);",
-                  "pm.collectionVariables.set('medicoId', r.data.usuario._id);"
+                  "pm.collectionVariables.set('tokenPaciente', r.data.token);",
+                  "pm.collectionVariables.set('pacienteId', r.data.usuario._id);"
                 ]
               }
             }
           ]
-        },
-        {
-          "name": "Login (credenciales incorrectas → 401)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"usuario\": \"diego.leal@medivoz.com\",\n  \"password\": \"incorrecta\"\n}"
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
         },
         {
           "name": "Registro de médico",
@@ -135,18 +165,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/auth/registro",
+              "raw": "{{baseUrl}}/auth/medico/registro",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "auth",
+                "medico",
                 "registro"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Laura\",\n  \"apellidoP\": \"Soto\",\n  \"apellidoM\": \"Vega\",\n  \"email\": \"laura.soto@medivoz.com\",\n  \"especialidad\": \"Pediatría\",\n  \"cedula\": \"CED-1234567\",\n  \"telefono\": \"8112345678\",\n  \"password\": \"Laura@2026\"\n}"
+              "raw": "{\n  \"nombre\": \"Laura\",\n  \"apellidoP\": \"Soto\",\n  \"email\": \"laura.soto@medivoz.com\",\n  \"especialidad\": \"Pediatría\",\n  \"cedula\": \"CED-1234567\",\n  \"telefono\": \"8112345678\",\n  \"password\": \"Laura@2026\"\n}"
             },
             "auth": {
               "type": "noauth"
@@ -154,7 +185,7 @@
           }
         },
         {
-          "name": "Registro (validación → 400)",
+          "name": "Login médico",
           "request": {
             "method": "POST",
             "header": [
@@ -164,18 +195,63 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/auth/registro",
+              "raw": "{{baseUrl}}/auth/medico/login",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "auth",
-                "registro"
+                "medico",
+                "login"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"\",\n  \"email\": \"correo-malo\",\n  \"password\": \"123\"\n}"
+              "raw": "{\n  \"correo\": \"diego.leal@medivoz.com\",\n  \"password\": \"Medivoz@2026\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "pm.test('Login correcto', () => pm.expect(r.success).to.be.true);",
+                  "pm.collectionVariables.set('tokenMedico', r.data.token);",
+                  "pm.collectionVariables.set('medicoId', r.data.usuario._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login médico (incorrecto → 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/medico/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "medico",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"diego.leal@medivoz.com\",\n  \"password\": \"mala\"\n}"
             },
             "auth": {
               "type": "noauth"
@@ -183,7 +259,7 @@
           }
         },
         {
-          "name": "Perfil del médico en sesión",
+          "name": "Perfil (médico)",
           "request": {
             "method": "GET",
             "header": [
@@ -200,6 +276,271 @@
               "path": [
                 "auth",
                 "perfil"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Perfil (paciente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "perfil"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Portal del paciente",
+      "item": [
+        {
+          "name": "Lista de médicos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/doctores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "doctores"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Horarios disponibles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas/disponibles?medico={{medicoId}}&fecha={{fecha}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citas",
+                "disponibles"
+              ],
+              "query": [
+                {
+                  "key": "medico",
+                  "value": "{{medicoId}}"
+                },
+                {
+                  "key": "fecha",
+                  "value": "{{fecha}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Agendar cita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medico\": \"{{medicoId}}\",\n  \"fecha\": \"{{fecha}}\",\n  \"hora\": \"10:00\",\n  \"motivo\": \"Dolor de garganta\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.success) pm.collectionVariables.set('citaId', r.data._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agendar en horario ocupado (→ 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medico\": \"{{medicoId}}\",\n  \"fecha\": \"{{fecha}}\",\n  \"hora\": \"10:00\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mis citas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas/mias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citas",
+                "mias"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Paciente intenta ver pacientes (→ 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pacientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pacientes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -231,6 +572,16 @@
                 {
                   "key": "activos",
                   "value": "true"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
                 }
               ]
             }
@@ -270,6 +621,16 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombre\": \"Cetirizina\",\n  \"presentacion\": \"Tabletas\",\n  \"concentracion\": \"10 mg\",\n  \"via\": \"Oral\",\n  \"dosisSugerida\": \"10 mg cada 24 horas\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -291,6 +652,16 @@
               "path": [
                 "medicamentos",
                 "{{medicamentoId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -318,6 +689,16 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"activo\": true\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -344,6 +725,16 @@
               "path": [
                 "doctores"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -365,6 +756,16 @@
               "path": [
                 "doctores",
                 "{{medicoId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -391,7 +792,17 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"telefono\": \"8188887777\",\n  \"especialidad\": \"Medicina General\"\n}"
+              "raw": "{\n  \"telefono\": \"8188887777\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -400,68 +811,6 @@
     {
       "name": "Pacientes",
       "item": [
-        {
-          "name": "Registrar paciente",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/pacientes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pacientes"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Sofía\",\n  \"apellidoP\": \"Reyes\",\n  \"apellidoM\": \"Luna\",\n  \"fechaNacimiento\": \"2000-05-05\",\n  \"sexo\": \"Femenino\",\n  \"telefono\": \"8111112222\",\n  \"correo\": \"sofia@test.com\",\n  \"tipoSangre\": \"O+\",\n  \"direccion\": \"Calle 1, Monterrey\",\n  \"alergias\": \"Polen, Látex\",\n  \"contactoNombre\": \"Rosa Luna\",\n  \"contactoParentesco\": \"Madre\",\n  \"contactoTelefono\": \"8199998888\"\n}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const r = pm.response.json();",
-                  "if (r.success) pm.collectionVariables.set('pacienteId', r.data._id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Registrar paciente (validación → 400)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/pacientes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pacientes"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nombre\": \"\",\n  \"apellidoP\": \"X\",\n  \"fechaNacimiento\": \"2099-01-01\",\n  \"sexo\": \"Z\",\n  \"telefono\": \"123\"\n}"
-            }
-          }
-        },
         {
           "name": "Listar pacientes",
           "request": {
@@ -479,6 +828,16 @@
               ],
               "path": [
                 "pacientes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -511,6 +870,16 @@
                   "value": "Activo"
                 }
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -533,6 +902,16 @@
                 "pacientes",
                 "{{pacienteId}}"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -554,6 +933,16 @@
               "path": [
                 "pacientes",
                 "EXP-000001"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -581,78 +970,62 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"direccion\": \"Av. Nueva 456, Monterrey\",\n  \"estado\": \"Activo\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar (validación → 400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pacientes/{{pacienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pacientes",
+                "{{pacienteId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"12\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         }
       ]
     },
     {
-      "name": "Citas",
+      "name": "Citas (médico)",
       "item": [
         {
-          "name": "Agendar cita",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/citas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "citas"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"paciente\": \"{{pacienteId}}\",\n  \"medico\": \"{{medicoId}}\",\n  \"fecha\": \"2026-11-08\",\n  \"hora\": \"13:00\",\n  \"duracionMinutos\": 30,\n  \"motivo\": \"Revisión general\"\n}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const r = pm.response.json();",
-                  "if (r.success) pm.collectionVariables.set('citaId', r.data._id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Agendar cita empalmada (→ 409)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/citas",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "citas"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Paciente sin expediente\",\n  \"telefono\": \"8100000000\",\n  \"medico\": \"{{medicoId}}\",\n  \"fecha\": \"2026-11-08\",\n  \"hora\": \"13:15\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Listar citas del día",
+          "name": "Citas del día",
           "request": {
             "method": "GET",
             "header": [
@@ -662,7 +1035,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/citas?fecha=2026-11-08&medico={{medicoId}}",
+              "raw": "{{baseUrl}}/citas?fecha={{fecha}}&medico={{medicoId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -672,11 +1045,21 @@
               "query": [
                 {
                   "key": "fecha",
-                  "value": "2026-11-08"
+                  "value": "{{fecha}}"
                 },
                 {
                   "key": "medico",
                   "value": "{{medicoId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
                 }
               ]
             }
@@ -700,6 +1083,16 @@
               "path": [
                 "citas",
                 "{{citaId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -726,7 +1119,17 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"hora\": \"14:00\"\n}"
+              "raw": "{\n  \"fecha\": \"{{fecha}}\",\n  \"hora\": \"12:30\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -756,7 +1159,17 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paciente\": \"{{pacienteId}}\",\n  \"cita\": \"{{citaId}}\",\n  \"tipoConsulta\": \"Consulta general\",\n  \"severidad\": \"Leve\",\n  \"presion\": \"120/80\",\n  \"frecuencia\": 75,\n  \"temperatura\": 37.2,\n  \"peso\": 60,\n  \"talla\": 165,\n  \"sintomas\": \"Tos seca y dolor de garganta\",\n  \"diagnosticos\": [\n    \"Rinofaringitis aguda (resfriado común)\"\n  ],\n  \"medicamentos\": [\n    {\n      \"medicamento\": \"{{medicamentoId}}\",\n      \"nombre\": \"Paracetamol\",\n      \"dosis\": \"500 mg cada 8 horas por 3 días\"\n    }\n  ],\n  \"notas\": \"Reposo\"\n}"
+              "raw": "{\n  \"paciente\": \"{{pacienteId}}\",\n  \"cita\": \"{{citaId}}\",\n  \"severidad\": \"Leve\",\n  \"presion\": \"120/80\",\n  \"frecuencia\": 75,\n  \"temperatura\": 37.2,\n  \"peso\": 60,\n  \"talla\": 165,\n  \"sintomas\": \"Tos seca y dolor de garganta\",\n  \"diagnosticos\": [\n    \"Faringitis aguda\"\n  ],\n  \"medicamentos\": [\n    {\n      \"medicamento\": \"{{medicamentoId}}\",\n      \"nombre\": \"Paracetamol\",\n      \"dosis\": \"500 mg cada 8 horas por 3 días\"\n    }\n  ],\n  \"notas\": \"Reposo\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           },
           "event": [
@@ -799,6 +1212,16 @@
                   "value": "{{pacienteId}}"
                 }
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -820,6 +1243,16 @@
               "path": [
                 "consultas",
                 "{{consultaId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -847,6 +1280,16 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"notas\": \"Reposo 3 días\",\n  \"severidad\": \"Moderado\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -879,6 +1322,16 @@
                   "value": "{{pacienteId}}"
                 }
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -900,6 +1353,16 @@
               "path": [
                 "recetas",
                 "{{recetaId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -926,7 +1389,17 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"indicaciones\": \"Tomar abundantes líquidos.\"\n}"
+              "raw": "{\n  \"medicamentos\": [\n    {\n      \"nombre\": \"Ibuprofeno\",\n      \"dosis\": \"400 mg cada 8 horas\"\n    }\n  ],\n  \"indicaciones\": \"Tomar abundantes líquidos.\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -954,6 +1427,16 @@
                 "reportes",
                 "resumen"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -975,6 +1458,16 @@
               "path": [
                 "reportes",
                 "consultas-por-medico"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -998,6 +1491,16 @@
                 "reportes",
                 "asistencia-citas"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -1019,6 +1522,16 @@
               "path": [
                 "reportes",
                 "diagnosticos-frecuentes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -1042,6 +1555,16 @@
                 "reportes",
                 "medicamentos-mas-recetados"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -1063,6 +1586,16 @@
               "path": [
                 "reportes",
                 "pacientes-frecuentes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -1091,11 +1624,21 @@
                 "recetas",
                 "{{recetaId}}"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Crear receta para consulta",
+          "name": "Crear receta para la consulta",
           "request": {
             "method": "POST",
             "header": [
@@ -1115,7 +1658,17 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"consulta\": \"{{consultaId}}\",\n  \"medicamentos\": [\n    {\n      \"nombre\": \"Loratadina\",\n      \"dosis\": \"10 mg cada 24 horas\"\n    }\n  ]\n}"
+              "raw": "{\n  \"consulta\": \"{{consultaId}}\",\n  \"medicamentos\": [\n    {\n      \"nombre\": \"Loratadina\",\n      \"dosis\": \"10 mg diario\"\n    }\n  ]\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -1138,11 +1691,21 @@
                 "consultas",
                 "{{consultaId}}"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Cancelar cita",
+          "name": "Paciente cancela su cita",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1160,6 +1723,16 @@
                 "citas",
                 "{{citaId}}",
                 "cancelar"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenPaciente}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -1183,6 +1756,16 @@
                 "citas",
                 "{{citaId}}"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
@@ -1204,6 +1787,16 @@
               "path": [
                 "pacientes",
                 "{{pacienteId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }
@@ -1227,11 +1820,21 @@
                 "medicamentos",
                 "{{medicamentoId}}"
               ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Eliminar médico",
+          "name": "Eliminar otro médico (→ 403)",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1241,13 +1844,23 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/doctores/{{medicoId}}",
+              "raw": "{{baseUrl}}/doctores/000000000000000000000000",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "doctores",
-                "{{medicoId}}"
+                "000000000000000000000000"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMedico}}",
+                  "type": "string"
+                }
               ]
             }
           }

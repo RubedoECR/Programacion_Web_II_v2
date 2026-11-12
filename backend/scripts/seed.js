@@ -13,7 +13,7 @@ const Cita = require('../src/models/Cita');
 const Consulta = require('../src/models/Consulta');
 const Receta = require('../src/models/Receta');
 
-const RESET = process.argv.includes('--reset');
+const BORRAR_TODO = process.argv.includes('--reset');
 
 const MEDICAMENTOS = [
   { nombre: 'Paracetamol', presentacion: 'Tabletas', concentracion: '500 mg', via: 'Oral', dosisSugerida: '500 mg cada 8 horas por 3 días' },
@@ -32,71 +32,78 @@ const MEDICOS = [
 ];
 
 const PACIENTES = [
-  { expediente: 'EXP-000001', nombre: 'Carlos', apellidoP: 'Gómez', apellidoM: 'Ruiz', fechaNacimiento: '1985-04-12', sexo: 'Masculino', telefono: '8119876543', correo: 'carlos.gomez@test.com', tipoSangre: 'O+', direccion: 'Av. Constitución 1234, Monterrey, NL', alergias: ['Penicilina'], contactoEmergencia: { nombre: 'María Ruiz', parentesco: 'Madre', telefono: '8111223344' } },
-  { expediente: 'EXP-000002', nombre: 'Ana', apellidoP: 'Martínez', apellidoM: 'López', fechaNacimiento: '1992-09-30', sexo: 'Femenino', telefono: '8122334455', correo: 'ana.martinez@test.com', tipoSangre: 'A+', direccion: 'Calle Hidalgo 45, San Pedro, NL', alergias: [], contactoEmergencia: { nombre: 'Luis Martínez', parentesco: 'Esposo', telefono: '8133445566' } },
-  { expediente: 'EXP-000003', nombre: 'Jorge', apellidoP: 'Ramírez', apellidoM: 'Treviño', fechaNacimiento: '1968-01-22', sexo: 'Masculino', telefono: '8144556677', correo: '', tipoSangre: 'B+', direccion: 'Col. Mitras Centro, Monterrey, NL', alergias: ['Sulfas'], contactoEmergencia: { nombre: 'Rosa Treviño', parentesco: 'Hermana', telefono: '8155667788' } },
+  { expediente: 'EXP-000001', nombre: 'Carlos', apellidoP: 'Gómez', apellidoM: 'Ruiz', fechaNacimiento: '1985-04-12', sexo: 'Masculino', telefono: '8119876543', correo: 'carlos.gomez@correo.com', password: 'Paciente@2026', tipoSangre: 'O+', direccion: 'Av. Constitución 1234, Monterrey, NL', alergias: ['Penicilina'], contactoEmergencia: { nombre: 'María Ruiz', parentesco: 'Madre', telefono: '8111223344' } },
+  { expediente: 'EXP-000002', nombre: 'Ana', apellidoP: 'Martínez', apellidoM: 'López', fechaNacimiento: '1992-09-30', sexo: 'Femenino', telefono: '8122334455', correo: 'ana.martinez@correo.com', password: 'Paciente@2026', tipoSangre: 'A+', direccion: 'Calle Hidalgo 45, San Pedro, NL', alergias: [], contactoEmergencia: { nombre: 'Luis Martínez', parentesco: 'Esposo', telefono: '8133445566' } },
+  { expediente: 'EXP-000003', nombre: 'Jorge', apellidoP: 'Ramírez', apellidoM: 'Treviño', fechaNacimiento: '1968-01-22', sexo: 'Masculino', telefono: '8144556677', correo: 'jorge.ramirez@correo.com', password: 'Paciente@2026', tipoSangre: 'B+', direccion: 'Col. Mitras Centro, Monterrey, NL', alergias: ['Sulfas'], contactoEmergencia: { nombre: 'Rosa Treviño', parentesco: 'Hermana', telefono: '8155667788' } },
 ];
 
-const fechaISO = (diasDesdeHoy) => {
+// Fecha AAAA-MM-DD sumando días a hoy (negativo = días atrás)
+function fechaConDias(dias) {
   const d = new Date();
-  d.setDate(d.getDate() + diasDesdeHoy);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+  d.setDate(d.getDate() + dias);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
 
 async function main() {
   await mongoose.connect(process.env.MONGODB_URI);
-  console.log(`Conectado a "${mongoose.connection.name}"`);
+  console.log('Conectado a "' + mongoose.connection.name + '"');
 
-  if (RESET) {
-    await Promise.all([Usuario, Paciente, Medicamento, Cita, Consulta, Receta].map((M) => M.deleteMany({})));
+  if (BORRAR_TODO) {
+    await Usuario.deleteMany({});
+    await Paciente.deleteMany({});
+    await Medicamento.deleteMany({});
+    await Cita.deleteMany({});
+    await Consulta.deleteMany({});
+    await Receta.deleteMany({});
     console.log('🧹 Colecciones vaciadas');
   }
 
-  // Asegura los índices (unique) definidos en los modelos
-  await Promise.all([Usuario, Paciente, Medicamento, Cita, Consulta, Receta].map((M) => M.syncIndexes()));
-
   for (const m of MEDICAMENTOS) {
-    await Medicamento.updateOne({ nombre: m.nombre }, { $setOnInsert: m }, { upsert: true });
+    const existe = await Medicamento.findOne({ nombre: m.nombre });
+    if (!existe) await Medicamento.create(m);
   }
 
   const medicos = [];
   for (const datos of MEDICOS) {
     let medico = await Usuario.findOne({ email: datos.email });
-    if (!medico) medico = await Usuario.create({ ...datos, usuario: datos.email });
+    if (!medico) medico = await Usuario.create(datos);
     medicos.push(medico);
   }
 
   const pacientes = [];
   for (const datos of PACIENTES) {
-    let paciente = await Paciente.findOne({ expediente: datos.expediente });
-    if (!paciente) paciente = await Paciente.create(datos);
-    pacientes.push(paciente);
+    let paciente = await Paciente.findOne({ correo: datos.correo });
+    if (!paciente && !(await Paciente.findOne({ expediente: datos.expediente }))) {
+      paciente = await Paciente.create(datos);
+    }
+    if (paciente) pacientes.push(paciente);
   }
 
-  // Datos de ejemplo de citas, consultas y recetas solo en modo --reset
-  if (RESET) {
+  // Citas, consultas y recetas de ejemplo solo en modo --reset
+  if (BORRAR_TODO) {
     const [diego, edgar] = medicos;
     const [carlos, ana, jorge] = pacientes;
     const paracetamol = await Medicamento.findOne({ nombre: 'Paracetamol' });
     const losartan = await Medicamento.findOne({ nombre: 'Losartán' });
 
-    const citaPasada = await Cita.create({ paciente: carlos._id, nombre: carlos.nombreCompleto, telefono: carlos.telefono, medico: diego._id, fecha: fechaISO(-3), hora: '09:00', motivo: 'Dolor de cabeza y fiebre', estado: 'Atendida' });
-    await Cita.create({ paciente: jorge._id, nombre: jorge.nombreCompleto, telefono: jorge.telefono, medico: edgar._id, fecha: fechaISO(-2), hora: '10:30', motivo: 'Control de presión', estado: 'Cancelada', fechaCancelacion: new Date() });
-    await Cita.create({ paciente: ana._id, nombre: ana.nombreCompleto, telefono: ana.telefono, medico: diego._id, fecha: fechaISO(0), hora: '09:30', motivo: 'Revisión general' });
-    await Cita.create({ paciente: jorge._id, nombre: jorge.nombreCompleto, telefono: jorge.telefono, medico: diego._id, fecha: fechaISO(0), hora: '11:00', motivo: 'Seguimiento de hipertensión' });
-    await Cita.create({ paciente: carlos._id, nombre: carlos.nombreCompleto, telefono: carlos.telefono, medico: edgar._id, fecha: fechaISO(1), hora: '12:00', motivo: 'Resultados de laboratorio' });
+    const citaPasada = await Cita.create({ paciente: carlos._id, medico: diego._id, fecha: fechaConDias(-3), hora: '09:00', motivo: 'Dolor de cabeza y fiebre', estado: 'Atendida' });
+    await Cita.create({ paciente: jorge._id, medico: edgar._id, fecha: fechaConDias(-2), hora: '10:30', motivo: 'Control de presión', estado: 'Cancelada' });
+    await Cita.create({ paciente: ana._id, medico: diego._id, fecha: fechaConDias(0), hora: '14:30', motivo: 'Revisión general' });
+    await Cita.create({ paciente: jorge._id, medico: diego._id, fecha: fechaConDias(1), hora: '11:00', motivo: 'Seguimiento de hipertensión' });
+    await Cita.create({ paciente: carlos._id, medico: edgar._id, fecha: fechaConDias(2), hora: '12:00', motivo: 'Resultados de laboratorio' });
 
-    const c1 = await Consulta.create({ paciente: carlos._id, medico: diego._id, cita: citaPasada._id, fecha: new Date(`${fechaISO(-3)}T09:15:00`), severidad: 'Moderado', presion: '125/85', frecuencia: 88, temperatura: 38.6, peso: 80, talla: 175, imc: 26.1, sintomas: 'Cefalea pulsátil y fiebre de 2 días', diagnosticos: ['Rinofaringitis aguda (resfriado común)'], alergias: ['Penicilina'] });
-    await Receta.create({ consulta: c1._id, paciente: carlos._id, medico: diego._id, fecha: c1.fecha, medicamentos: [{ medicamento: paracetamol._id, nombre: paracetamol.nombre, dosis: paracetamol.dosisSugerida }], indicaciones: 'Reposo e hidratación abundante.' });
+    const c1 = await Consulta.create({ paciente: carlos._id, medico: diego._id, cita: citaPasada._id, fecha: new Date(fechaConDias(-3) + 'T09:15:00'), severidad: 'Moderado', presion: '125/85', frecuencia: 88, temperatura: 38.6, peso: 80, talla: 175, imc: 26.1, sintomas: 'Cefalea pulsátil y fiebre de 2 días', diagnosticos: ['Rinofaringitis aguda (resfriado común)'], alergias: ['Penicilina'] });
+    await Receta.create({ consulta: c1._id, paciente: carlos._id, medico: diego._id, fecha: c1.fecha, folio: 'REC-' + String(c1._id).slice(-6).toUpperCase(), medicamentos: [{ medicamento: paracetamol._id, nombre: paracetamol.nombre, dosis: paracetamol.dosisSugerida }], indicaciones: 'Reposo e hidratación abundante.' });
 
-    const c2 = await Consulta.create({ paciente: jorge._id, medico: edgar._id, fecha: new Date(`${fechaISO(-10)}T10:00:00`), severidad: 'Leve', presion: '145/95', frecuencia: 76, temperatura: 36.5, peso: 92, talla: 170, imc: 31.8, sintomas: 'Cefalea occipital matutina', diagnosticos: ['Hipertensión arterial sistémica estadio 1'], alergias: ['Sulfas'] });
-    await Receta.create({ consulta: c2._id, paciente: jorge._id, medico: edgar._id, fecha: c2.fecha, medicamentos: [{ medicamento: losartan._id, nombre: losartan.nombre, dosis: losartan.dosisSugerida }], indicaciones: 'Dieta baja en sodio. Tomar la presión diario.' });
+    const c2 = await Consulta.create({ paciente: jorge._id, medico: edgar._id, fecha: new Date(fechaConDias(-10) + 'T10:00:00'), severidad: 'Leve', presion: '145/95', frecuencia: 76, temperatura: 36.5, peso: 92, talla: 170, imc: 31.8, sintomas: 'Cefalea occipital matutina', diagnosticos: ['Hipertensión arterial sistémica estadio 1'], alergias: ['Sulfas'] });
+    await Receta.create({ consulta: c2._id, paciente: jorge._id, medico: edgar._id, fecha: c2.fecha, folio: 'REC-' + String(c2._id).slice(-6).toUpperCase(), medicamentos: [{ medicamento: losartan._id, nombre: losartan.nombre, dosis: losartan.dosisSugerida }], indicaciones: 'Dieta baja en sodio. Tomar la presión diario.' });
 
     console.log('📋 Citas, consultas y recetas de ejemplo creadas');
   }
 
   console.log('✅ Seed terminado');
-  console.log('   Usuarios de prueba: diego.leal@medivoz.com / edgar.cepeda@medivoz.com  (contraseña: Medivoz@2026)');
+  console.log('   Médicos:   diego.leal@medivoz.com / edgar.cepeda@medivoz.com   (contraseña: Medivoz@2026)');
+  console.log('   Pacientes: carlos.gomez@correo.com / ana.martinez@correo.com / jorge.ramirez@correo.com   (contraseña: Paciente@2026)');
   await mongoose.disconnect();
 }
 

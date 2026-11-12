@@ -1,11 +1,11 @@
-// Sesión del médico: guarda el token JWT y los datos reales del usuario que inició sesión.
-// Si no hay sesión, usuario = null y las rutas protegidas redirigen a /login.
+// Sesión del usuario: guarda el token JWT, el tipo de usuario (medico / paciente) y sus datos.
+// Si no hay sesión, usuario = null y las rutas protegidas mandan al login.
 import { useEffect, useState } from 'react';
 import { AuthContexto } from './authContexto';
 import { leerSesion, guardarSesion, borrarSesion } from '../api/cliente';
 
 export function AuthProvider({ children }) {
-  const [sesion, setSesion] = useState(() => leerSesion());
+  const [sesion, setSesion] = useState(leerSesion());
 
   // Si el backend responde 401 en cualquier petición, se cierra la sesión
   useEffect(() => {
@@ -14,10 +14,10 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('sesion-expirada', alExpirar);
   }, []);
 
-  function iniciarSesion({ token, usuario }) {
-    const nueva = { token, usuario };
-    guardarSesion(nueva);
-    setSesion(nueva);
+  // datos = { token, rol, usuario }  (lo que responde el login)
+  function iniciarSesion(datos) {
+    guardarSesion(datos);
+    setSesion(datos);
   }
 
   function actualizarUsuario(usuario) {
@@ -32,8 +32,9 @@ export function AuthProvider({ children }) {
   }
 
   const valor = {
-    usuario: sesion?.usuario || null,
-    token: sesion?.token || null,
+    usuario: sesion ? sesion.usuario : null,
+    rol: sesion ? sesion.rol : null,
+    token: sesion ? sesion.token : null,
     iniciarSesion,
     actualizarUsuario,
     cerrarSesion,

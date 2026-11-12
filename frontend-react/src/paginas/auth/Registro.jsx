@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registrarDoctor } from '../../api/auth.api';
+import { registrarMedico } from '../../api/auth.api';
 import '../../estilos/Registro.css';
 
 export default function Registro() {
@@ -95,8 +95,8 @@ export default function Registro() {
     const fecha = new Date(fechaNacimiento);
     const fechaLimite = new Date('2002-01-01');
 
-    if (fecha < fechaLimite) {
-      mostrarToast('La fecha de nacimiento no puede ser anterior al 1 de enero de 2002.', 'error');
+    if (fecha > fechaLimite) {
+      mostrarToast('La fecha de nacimiento no puede ser posterior al 1 de enero de 2002.', 'error');
       marcarCampoInvalido('fechaNacimiento');
       return;
     }
@@ -151,7 +151,7 @@ export default function Registro() {
         password
       };
 
-      const respuesta = await registrarDoctor(payload);
+      const respuesta = await registrarMedico(payload);
 
       if (respuesta.success) {
         mostrarToast('Registro exitoso. Redirigiendo...', 'exito');

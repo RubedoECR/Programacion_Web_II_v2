@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';
 import HeaderClinico from '../../componentes/HeaderClinico';
 import { obtenerPaciente } from '../../api/pacientes.api';
-import { obtenerConsultas } from '../../api/consultas.api';
+import { obtenerConsultas, eliminarConsulta } from '../../api/consultas.api';
 import { obtenerRecetas } from '../../api/recetas.api';
 import { adaptarPaciente, fechaCorta, nombreMedico } from '../../utils/formato';
 import '../../estilos/App.css';
@@ -58,7 +58,18 @@ export default function Historial() {
     return () => { activo = false; };
   }, [id]);
 
-  // Última consulta registrada en MongoDB para signos vitales
+  async function borrarConsulta(c) {
+    if (!window.confirm('¿Eliminar esta consulta y su receta? Esta acción no se puede deshacer.')) return;
+    const res = await eliminarConsulta(c._id);
+    if (res.success) {
+      setConsultas(consultas.filter(x => x._id !== c._id));
+      setRecetas(recetas.filter(r => String(r.consulta) !== String(c._id)));
+    } else {
+      window.alert(res.message);
+    }
+  }
+
+  // Última consulta registrada para signos vitales
   const ultimaConsulta = consultas.length > 0 ? consultas[0] : null;
 
   // Diagnósticos acumulados en MongoDB
@@ -189,15 +200,15 @@ export default function Historial() {
               type="button"
               className="btn-secondary"
               style={{ width: '100%', marginBottom: '0.6rem' }}
-              onClick={() => navigate(`/paciente/agendar?expediente=${encodeURIComponent(paciente.expediente)}`)}
+              onClick={() => navigate(`/pacientes/${paciente._id}/editar`)}
             >
-              📅 Agendar Cita
+              ✏️ Editar datos del paciente
             </button>
           </aside>
 
-          {/* Contenido Principal: Historial Clínico desde MongoDB */}
+          {/* Contenido Principal: Historial Clínico */}
           <main className="main-content">
-            {/* Signos Vitales Última Consulta Registrada en MongoDB */}
+            {/* Signos Vitales de la última consulta */}
             <div className="clinical-card" style={{ marginBottom: '1.5rem' }}>
               <div className="card-title">
                 <span className="icon">🩺</span>
@@ -260,6 +271,14 @@ export default function Historial() {
                           {c.receta && (
                             <> · <Link to={`/receta/${c.receta._id}`}>Ver receta {c.receta.folio}</Link></>
                           )}
+                        </div>
+                        <div className="no-print" style={{ marginTop: '0.4rem' }}>
+                          <button type="button" className="btn-secondary btn-chico" onClick={() => navigate(`/consultas/${c._id}/editar`)}>
+                            ✏️ Editar consulta
+                          </button>
+                          <button type="button" className="btn-danger btn-chico" onClick={() => borrarConsulta(c)}>
+                            🗑️ Eliminar
+                          </button>
                         </div>
                       </div>
                     ))}

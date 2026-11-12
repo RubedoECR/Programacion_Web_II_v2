@@ -1,43 +1,39 @@
-// Manejo centralizado de errores: toda excepción termina aquí y se registra en logs/app.log
+// Manejo de errores: los controladores mandan aquí cualquier excepción con next(error).
+// Todo queda registrado en logs/app.log
 const logger = require('../utils/logger');
 
 function rutaNoEncontrada(req, res) {
-  res.status(404).json({ success: false, message: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });
+  res.status(404).json({ success: false, message: 'Ruta no encontrada: ' + req.method + ' ' + req.originalUrl });
 }
 
+// Express reconoce un manejador de errores porque recibe 4 parámetros
 // eslint-disable-next-line no-unused-vars
-function manejadorErrores(err, req, res, next) {
-  let status = err.status || 500;
-  let message = err.message || 'Error en el servidor';
-  let extra = err.extra || {};
-
-  // Errores conocidos de Mongoose / MongoDB
-  if (err.name === 'ValidationError') {
-    status = 400;
-    const errores = Object.values(err.errors).map((e) => ({ campo: e.path, mensaje: e.message }));
-    message = errores[0]?.mensaje || 'Datos inválidos';
-    extra = { errores };
-  } else if (err.name === 'CastError') {
-    status = 400;
-    message = `Valor inválido para ${err.path}`;
-  } else if (err.code === 11000) {
-    status = 409;
-    const campo = Object.keys(err.keyValue || {})[0] || 'campo';
-    message = `Ya existe un registro con ese ${campo}`;
-  } else if (err.type === 'entity.parse.failed') {
-    status = 400;
-    message = 'El cuerpo de la petición no es un JSON válido';
+function manejadorErrores(error, req, res, next) {
+  // Errores de validación del modelo de Mongoose
+  if (error.name === 'ValidationError') {
+    const primerError = Object.values(error.errors)[0];
+    logger.warn('Datos rechazados por el modelo', { ruta: req.originalUrl, error: primerError.message });
+    return res.status(400).json({ success: false, message: primerError.message });
   }
 
-  const datosLog = { metodo: req.method, ruta: req.originalUrl, status, error: err.message };
-  if (status >= 500) {
-    logger.error('Excepción en el servidor', { ...datosLog, stack: err.stack });
-    message = 'Error en el servidor';
-  } else {
-    logger.warn('Petición rechazada', datosLog);
+  // ID con formato incorrecto
+  if (error.name === 'CastError') {
+    return res.status(400).json({ success: false, message: 'El ID no es válido' });
   }
 
-  res.status(status).json({ success: false, message, ...extra });
+  // Registro duplicado (índice unique)
+  if (error.code === 11000) {
+    return res.status(409).json({ success: false, message: 'Ya existe un registro con esos datos' });
+  }
+
+  // JSON mal escrito en el cuerpo de la petición
+  if (error.type === 'entity.parse.failed') {
+    return res.status(400).json({ success: false, message: 'El cuerpo de la petición no es un JSON válido' });
+  }
+
+  // Cualquier otro error: 500
+  logger.error('Excepción en el servidor', { metodo: req.method, ruta: req.originalUrl, error: error.message, stack: error.stack });
+  res.status(500).json({ success: false, message: 'Error en el servidor' });
 }
 
 module.exports = { rutaNoEncontrada, manejadorErrores };

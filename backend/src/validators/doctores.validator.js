@@ -1,21 +1,20 @@
 // Validaciones de backend para la tabla de médicos (usuarios).
-const { body } = require('express-validator');
-const { idValido, telefonoValido } = require('./comunes');
-const { FORMATO_PASSWORD, MENSAJE_PASSWORD } = require('./auth.validator');
+const c = require('./comunes');
 
-const obtener = [idValido];
+// PUT /doctores/:id
+function actualizar(req) {
+  const datos = req.body;
+  const errores = c.idEnUrl(req);
 
-const actualizar = [
-  idValido,
-  body('nombre').optional().trim().notEmpty().withMessage('El nombre no puede quedar vacío'),
-  body('email').optional().trim().isEmail().withMessage('El correo no es válido').toLowerCase(),
-  body('especialidad').optional().trim(),
-  body('cedula').optional().trim(),
-  telefonoValido('telefono').optional({ values: 'falsy' }),
-  body('password').optional({ values: 'falsy' }).matches(FORMATO_PASSWORD).withMessage(MENSAJE_PASSWORD),
-  body('rol').not().exists().withMessage('El rol no se puede modificar desde aquí'),
-];
+  if (datos.nombre !== undefined && c.estaVacio(datos.nombre)) errores.push('El nombre no puede quedar vacío');
+  if (datos.email !== undefined && !c.esCorreo(datos.email)) errores.push('El correo no es válido');
+  if (!c.estaVacio(datos.telefono) && !c.esTelefono(datos.telefono)) {
+    errores.push('El teléfono debe tener al menos 10 dígitos');
+  }
+  // La contraseña solo se revisa si se quiere cambiar
+  if (!c.estaVacio(datos.password) && !c.esPasswordValida(datos.password)) errores.push(c.MENSAJE_PASSWORD);
 
-const eliminar = [idValido];
+  return errores;
+}
 
-module.exports = { obtener, actualizar, eliminar };
+module.exports = { actualizar, obtener: c.idEnUrl, eliminar: c.idEnUrl };

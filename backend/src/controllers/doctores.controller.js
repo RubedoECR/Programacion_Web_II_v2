@@ -1,68 +1,86 @@
-// Controlador de médicos (colección usuarios). El alta se hace en /auth/registro.
+// Controlador de médicos (colección usuarios). El alta se hace en /api/auth/medico/registro.
 const Usuario = require('../models/Usuario');
 const Cita = require('../models/Cita');
 const Consulta = require('../models/Consulta');
-const ErrorApi = require('../utils/ErrorApi');
-const elegir = require('../utils/elegir');
 
-const CAMPOS_EDITABLES = ['nombre', 'apellidoP', 'apellidoM', 'email', 'especialidad', 'cedula', 'telefono', 'password'];
-
-// Un médico solo puede modificar o borrar su propia cuenta (salvo que sea admin)
-function verificarPropietario(req) {
-  if (req.usuario.rol !== 'admin' && req.usuario.id !== req.params.id) {
-    throw new ErrorApi(403, 'Solo puedes modificar tu propia cuenta');
+// GET /api/doctores   (médicos y pacientes: el paciente lo usa para elegir con quién agendar)
+async function listar(req, res, next) {
+  try {
+    const doctores = await Usuario.find({ activo: { $ne: false } }).sort({ nombre: 1 });
+    res.json({ success: true, data: doctores });
+  } catch (error) {
+    next(error);
   }
-}
-
-// GET /api/doctores
-async function listar(req, res) {
-  const doctores = await Usuario.find({ activo: true }).sort({ nombre: 1 });
-  res.json({ success: true, data: doctores });
 }
 
 // GET /api/doctores/:id
-async function obtener(req, res) {
-  const doctor = await Usuario.findById(req.params.id);
-  if (!doctor) throw new ErrorApi(404, 'Médico no encontrado');
-  res.json({ success: true, data: doctor });
-}
-
-// PUT /api/doctores/:id
-async function actualizar(req, res) {
-  verificarPropietario(req);
-  const doctor = await Usuario.findById(req.params.id);
-  if (!doctor) throw new ErrorApi(404, 'Médico no encontrado');
-
-  const cambios = elegir(req.body, CAMPOS_EDITABLES);
-  if (!cambios.password) delete cambios.password;
-  if (cambios.email && cambios.email !== doctor.email) {
-    if (await Usuario.exists({ email: cambios.email, _id: { $ne: doctor._id } })) {
-      throw new ErrorApi(409, 'Ese correo ya está registrado');
+async function obtener(req, res, next) {
+  try {
+    const doctor = await Usuario.findById(req.params.id);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Médico no encontrado' });
     }
-    cambios.usuario = cambios.email;
+    res.json({ success: true, data: doctor });
+  } catch (error) {
+    next(error);
   }
-
-  Object.assign(doctor, cambios);
-  await doctor.save(); // save() dispara el cifrado de contraseña
-  res.json({ success: true, message: 'Datos del médico actualizados', data: doctor });
 }
 
-// DELETE /api/doctores/:id
-async function eliminar(req, res) {
-  verificarPropietario(req);
-  const id = req.params.id;
+// PUT /api/doctores/:id   (solo su propia cuenta)
+async function actualizar(req, res, next) {
+  try {
+    if (req.params.id !== req.usuario.id) {
+      return res.status(403).json({ success: false, message: 'Solo puedes modificar tu propia cuenta' });
+    }
 
-  const [tieneConsultas, tieneCitas] = await Promise.all([
-    Consulta.exists({ medico: id }),
-    Cita.exists({ medico: id, estado: 'Confirmada' }),
-  ]);
-  if (tieneConsultas || tieneCitas) {
-    throw new ErrorApi(409, 'El médico tiene consultas o citas pendientes; no se puede eliminar');
+    const cambios = {};
+    const campos = ['nombre', 'apellidoP', 'apellidoM', 'especialidad', 'cedula', 'telefono'];
+    for (const campo of campos) {
+      if (req.body[campo] !== undefined) cambios[campo] = req.body[campo];
+    }
+    if (req.body.password) cambios.password = req.body.password;
+
+    if (req.body.email) {
+      const email = req.body.email.trim().toLowerCase();
+      const otro = await Usuario.findOne({ email: email, _id: { $ne: req.params.id } });
+      if (otro) {
+        return res.status(409).json({ success: false, message: 'Ese correo ya está registrado' });
+      }
+      cambios.email = email;
+    }
+
+    const doctor = await Usuario.findByIdAndUpdate(req.params.id, cambios, { new: true, runValidators: true });
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Médico no encontrado' });
+    }
+    res.json({ success: true, message: 'Datos actualizados', data: doctor });
+  } catch (error) {
+    next(error);
   }
+}
 
-  const borrado = await Usuario.findByIdAndDelete(id);
-  if (!borrado) throw new ErrorApi(404, 'Médico no encontrado');
-  res.json({ success: true, message: 'Médico eliminado' });
+// DELETE /api/doctores/:id   (solo su propia cuenta)
+async function eliminar(req, res, next) {
+  try {
+    const id = req.params.id;
+    if (id !== req.usuario.id) {
+      return res.status(403).json({ success: false, message: 'Solo puedes eliminar tu propia cuenta' });
+    }
+
+    const tieneConsultas = await Consulta.findOne({ medico: id });
+    const tieneCitas = await Cita.findOne({ medico: id, estado: 'Confirmada' });
+    if (tieneConsultas || tieneCitas) {
+      return res.status(409).json({
+        success: false,
+        message: 'Tienes consultas o citas pendientes registradas; no se puede eliminar la cuenta',
+      });
+    }
+
+    await Usuario.findByIdAndDelete(id);
+    res.json({ success: true, message: 'Cuenta eliminada' });
+  } catch (error) {
+    next(error);
+  }
 }
 
 module.exports = { listar, obtener, actualizar, eliminar };

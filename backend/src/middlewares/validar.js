@@ -1,21 +1,16 @@
-// Ejecuta las reglas de un validador (express-validator) y responde 400 si algo falla.
-const { validationResult } = require('express-validator');
+// Middleware que ejecuta una función de validación (de la carpeta validators).
+// La función recibe req y regresa una lista de errores; si la lista no está vacía se responde 400.
+//
+// Uso en una ruta:  router.post('/', validar(v.crear), ctrl.crear)
+function validar(funcionValidadora) {
+  return (req, res, next) => {
+    const errores = funcionValidadora(req);
 
-function validar(reglas) {
-  return [
-    ...reglas,
-    (req, res, next) => {
-      const resultado = validationResult(req);
-      if (resultado.isEmpty()) return next();
-
-      const errores = resultado.array().map((e) => ({ campo: e.path, mensaje: e.msg }));
-      return res.status(400).json({
-        success: false,
-        message: errores[0].mensaje,
-        errores,
-      });
-    },
-  ];
+    if (errores.length > 0) {
+      return res.status(400).json({ success: false, message: errores[0], errores });
+    }
+    next();
+  };
 }
 
 module.exports = validar;
