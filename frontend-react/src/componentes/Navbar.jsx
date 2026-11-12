@@ -9,6 +9,7 @@ const RUTAS = [
   { to: '/consulta', texto: '🩺 Nueva consulta' },
   { to: '/paciente/agendar', texto: '⏰ Agendar cita' },
   { to: '/paciente/nuevo', texto: '➕ Nuevo paciente' },
+  { to: '/reportes', texto: '📊 Reportes' },
 ];
 
 export default function Navbar() {

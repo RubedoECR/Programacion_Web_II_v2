@@ -12,6 +12,7 @@ import PacienteNuevo from '../paginas/pacientes/PacienteNuevo';
 import Historial from '../paginas/pacientes/Historial';
 import Consulta from '../paginas/consultas/Consulta';
 import Receta from '../paginas/recetas/Receta';
+import Reportes from '../paginas/reportes/Reportes';
 
 export default function AppRouter() {
   return (
@@ -32,6 +33,7 @@ export default function AppRouter() {
           <Route path="/consulta" element={<Consulta />} />
           <Route path="/consulta/:id" element={<Consulta />} />
           <Route path="/receta/:id" element={<Receta />} />
+          <Route path="/reportes" element={<Reportes />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
