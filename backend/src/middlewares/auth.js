@@ -1,33 +1,59 @@
-// Verifica el token JWT que se envía en el header:  Authorization: Bearer <token>
-// Si es válido, deja los datos del médico en req.usuario.
+// Middlewares de autenticación.
+//  - verificarToken: revisa el header  Authorization: Bearer <token>
+//  - soloMedico / soloPaciente: dejan pasar solo a un tipo de usuario
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
+const Paciente = require('../models/Paciente');
 const logger = require('../utils/logger');
 
 async function verificarToken(req, res, next) {
   const header = req.headers.authorization || '';
-  const [tipo, token] = header.split(' ');
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
 
-  if (tipo !== 'Bearer' || !token) {
+  if (!token) {
     return res.status(401).json({ success: false, message: 'Token de autorización requerido' });
   }
 
+  let datos;
   try {
-    const datos = jwt.verify(token, process.env.JWT_SECRET);
-
-    // El usuario del token debe seguir existiendo y estar activo
-    const usuario = await Usuario.findById(datos.id).lean();
-    if (!usuario || usuario.activo === false) {
-      return res.status(401).json({ success: false, message: 'La sesión ya no es válida' });
-    }
-
-    req.usuario = { id: String(usuario._id), nombre: usuario.nombre, rol: usuario.rol };
-    next();
+    datos = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     logger.warn('Token rechazado', { ruta: req.originalUrl, motivo: error.message });
-    const mensaje = error.name === 'TokenExpiredError' ? 'La sesión expiró, inicia sesión de nuevo' : 'Token inválido';
-    return res.status(401).json({ success: false, message: mensaje });
+    return res.status(401).json({ success: false, message: 'Tu sesión expiró o no es válida, inicia sesión de nuevo' });
   }
+
+  // El usuario del token debe seguir existiendo
+  let usuario = null;
+  try {
+    if (datos.rol === 'medico') {
+      usuario = await Usuario.findById(datos.id);
+    } else if (datos.rol === 'paciente') {
+      usuario = await Paciente.findById(datos.id);
+    }
+  } catch (error) {
+    return next(error);
+  }
+
+  if (!usuario) {
+    return res.status(401).json({ success: false, message: 'La sesión ya no es válida' });
+  }
+
+  req.usuario = { id: String(usuario._id), rol: datos.rol, nombre: usuario.nombre };
+  next();
 }
 
-module.exports = { verificarToken };
+function soloMedico(req, res, next) {
+  if (req.usuario.rol !== 'medico') {
+    return res.status(403).json({ success: false, message: 'Esta sección es solo para médicos' });
+  }
+  next();
+}
+
+function soloPaciente(req, res, next) {
+  if (req.usuario.rol !== 'paciente') {
+    return res.status(403).json({ success: false, message: 'Esta sección es solo para pacientes' });
+  }
+  next();
+}
+
+module.exports = { verificarToken, soloMedico, soloPaciente };

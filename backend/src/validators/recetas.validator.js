@@ -1,19 +1,37 @@
 // Validaciones de backend para la tabla de recetas.
-const { body, query } = require('express-validator');
-const { idValido } = require('./comunes');
+const c = require('./comunes');
 
-const renglones = [
-  body('medicamentos').optional().isArray().withMessage('Los medicamentos deben ser una lista'),
-  body('medicamentos.*.nombre').trim().notEmpty().withMessage('Cada medicamento necesita nombre'),
-  body('medicamentos.*.medicamento').optional({ values: 'falsy' }).isMongoId().withMessage('Medicamento de catálogo no válido'),
-  body('medicamentos.*.dosis').optional().trim(),
-  body('indicaciones').optional().trim().isLength({ max: 2000 }).withMessage('Las indicaciones son demasiado largas'),
-];
+function revisarMedicamentos(medicamentos, errores) {
+  if (medicamentos === undefined) return;
+  if (!Array.isArray(medicamentos)) {
+    errores.push('Los medicamentos deben ser una lista');
+    return;
+  }
+  for (const med of medicamentos) {
+    if (c.estaVacio(med.nombre)) errores.push('Cada medicamento necesita nombre');
+  }
+}
 
-module.exports = {
-  listar: [query('paciente').optional().isMongoId().withMessage('Paciente inválido')],
-  crear: [body('consulta').isMongoId().withMessage('Consulta no válida'), ...renglones],
-  actualizar: [idValido, ...renglones],
-  obtener: [idValido],
-  eliminar: [idValido],
-};
+// POST /recetas
+function crear(req) {
+  const errores = [];
+  if (!c.esId(req.body.consulta)) errores.push('La consulta no es válida');
+  revisarMedicamentos(req.body.medicamentos, errores);
+  return errores;
+}
+
+// PUT /recetas/:id
+function actualizar(req) {
+  const errores = c.idEnUrl(req);
+  revisarMedicamentos(req.body.medicamentos, errores);
+  if (req.body.indicaciones && req.body.indicaciones.length > 2000) errores.push('Las indicaciones son demasiado largas');
+  return errores;
+}
+
+function listar(req) {
+  const errores = [];
+  if (req.query.paciente && !c.esId(req.query.paciente)) errores.push('Paciente inválido');
+  return errores;
+}
+
+module.exports = { crear, actualizar, listar, obtener: c.idEnUrl, eliminar: c.idEnUrl };

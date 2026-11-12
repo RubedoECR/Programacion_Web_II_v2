@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';
 import HeaderClinico from '../../componentes/HeaderClinico';
-import { obtenerReceta, actualizarReceta } from '../../api/recetas.api';
+import { obtenerReceta, actualizarReceta, eliminarReceta } from '../../api/recetas.api';
 import { fechaCorta, nombreCompleto, nombreMedico } from '../../utils/formato';
 import '../../estilos/App.css';
 
@@ -58,10 +58,34 @@ export default function Receta() {
     setTimeout(() => setToast({ visible: false, mensaje: '' }), 2400);
   };
 
-  // En la receta solo se editan las indicaciones; los datos clínicos vienen de la consulta
+  // Para agregar un medicamento a la receta
+  const [nuevoNombre, setNuevoNombre] = useState('');
+  const [nuevaDosis, setNuevaDosis] = useState('');
+
+  // Se guardan los medicamentos y las indicaciones; los datos clínicos se editan en la consulta
   const guardarCambios = async () => {
-    const res = await actualizarReceta(id, { indicaciones: recetaData.notas });
-    mostrarToast(res.success ? 'Indicaciones de la receta guardadas.' : res.message);
+    const res = await actualizarReceta(id, { medicamentos: recetaData.medicamentos, indicaciones: recetaData.notas });
+    mostrarToast(res.success ? 'Receta guardada.' : res.message);
+  };
+
+  const agregarMedicamento = () => {
+    if (nuevoNombre.trim() === '') return;
+    const lista = [...recetaData.medicamentos, { nombre: nuevoNombre.trim(), dosis: nuevaDosis.trim() }];
+    setRecetaData({ ...recetaData, medicamentos: lista });
+    setNuevoNombre('');
+    setNuevaDosis('');
+  };
+
+  const quitarMedicamento = (posicion) => {
+    const lista = recetaData.medicamentos.filter((m, i) => i !== posicion);
+    setRecetaData({ ...recetaData, medicamentos: lista });
+  };
+
+  const borrarReceta = async () => {
+    if (!window.confirm('¿Eliminar esta receta? La consulta se conserva.')) return;
+    const res = await eliminarReceta(id);
+    if (res.success) volver();
+    else mostrarToast(res.message);
   };
 
   const handleTextoChange = (campo, valor) => {
@@ -113,7 +137,7 @@ export default function Receta() {
             className="btn-primary"
             onClick={guardarCambios}
           >
-            💾 Guardar Indicaciones
+            💾 Guardar Receta
           </button>
 
           <button
@@ -132,6 +156,33 @@ export default function Receta() {
           >
             ← Volver al Historial
           </button>
+
+          <button type="button" className="btn-danger" onClick={borrarReceta}>
+            🗑️ Eliminar receta
+          </button>
+        </div>
+
+        {/* Editar medicamentos (no se imprime) */}
+        <div className="clinical-card no-print" style={{ marginBottom: '1rem' }}>
+          <strong>Medicamentos de la receta</strong>
+          {recetaData.medicamentos.map((m, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.3rem 0' }}>
+              <span>{i + 1}. {m.nombre} — {m.dosis}</span>
+              <button type="button" className="btn-danger btn-chico" onClick={() => quitarMedicamento(i)}>Quitar</button>
+            </div>
+          ))}
+          <div className="fila-formulario" style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+            <div className="form-group">
+              <label htmlFor="nuevoNombre">Medicamento</label>
+              <input id="nuevoNombre" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label htmlFor="nuevaDosis">Dosis</label>
+              <input id="nuevaDosis" value={nuevaDosis} onChange={(e) => setNuevaDosis(e.target.value)} />
+            </div>
+            <button type="button" className="btn-secondary" onClick={agregarMedicamento}>+ Agregar</button>
+          </div>
+          <small style={{ color: 'var(--text-muted)' }}>Recuerda presionar «Guardar Receta» para guardar los cambios.</small>
         </div>
 
         {/* Hoja de Receta Médica Imprimible */}

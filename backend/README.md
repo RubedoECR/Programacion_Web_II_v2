@@ -28,18 +28,31 @@ Flujo de una petición:
 cd backend
 npm install
 cp .env.example .env      # en Windows: copy .env.example .env  → y llena tus datos
-npm run seed              # crea catálogo de medicamentos y médicos de prueba
+npm run seed              # catálogo de medicamentos, médicos y pacientes de prueba
 npm run dev
 ```
 
-Usuarios de prueba del seed: `diego.leal@medivoz.com` / `edgar.cepeda@medivoz.com` — contraseña `Medivoz@2026`.
+Cuentas de prueba del seed:
+
+| Tipo | Correo | Contraseña |
+|---|---|---|
+| Médico | diego.leal@medivoz.com · edgar.cepeda@medivoz.com | Medivoz@2026 |
+| Paciente | carlos.gomez@correo.com · ana.martinez@correo.com · jorge.ramirez@correo.com | Paciente@2026 |
+
+## Tipos de usuario
+
+El token JWT guarda el **rol** (`medico` o `paciente`). Los middlewares `soloMedico` y `soloPaciente`
+(`src/middlewares/auth.js`) deciden quién puede usar cada ruta.
+
+- **Médico:** agenda, consultas, pacientes, recetas, medicamentos, reportes y su perfil.
+- **Paciente:** se registra solo, ve los horarios libres, agenda, ve y cancela sus citas.
 
 ## Colecciones (6)
 
 | Colección | Modelo | Relaciones |
 |---|---|---|
 | usuarios | Usuario (médicos) | — |
-| pacientes | Paciente | — |
+| pacientes | Paciente (con correo y contraseña para el portal) | — |
 | citas | Cita | paciente → pacientes, medico → usuarios |
 | consultas | Consulta | paciente → pacientes, medico → usuarios, cita → citas |
 | recetas | Receta | consulta → consultas, paciente, medico, medicamentos[].medicamento → medicamentos |
@@ -47,48 +60,45 @@ Usuarios de prueba del seed: `diego.leal@medivoz.com` / `edgar.cepeda@medivoz.co
 
 ## Endpoints
 
-Todas las rutas usan el prefijo `/api`. Todas, **excepto login y registro**, requieren el header
-`Authorization: Bearer <token>`. Todas responden JSON con la forma `{ success, message?, data? }`.
+Prefijo `/api`. Todas las rutas, **excepto login y registro**, requieren `Authorization: Bearer <token>`.
+Responden JSON con la forma `{ success, message?, data? }`.
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | /auth/login | Inicia sesión → `{ token, usuario }` (público) |
-| POST | /auth/registro | Registra un médico (público) |
-| GET | /auth/perfil | Datos del médico en sesión |
-| GET | /doctores | Lista de médicos activos |
-| GET / PUT / DELETE | /doctores/:id | Ver, actualizar o eliminar (solo la propia cuenta) |
-| GET | /pacientes?buscar=&estado= | Lista / búsqueda de pacientes |
-| GET | /pacientes/:id | Por `_id` o por expediente (`EXP-000001`) |
-| POST | /pacientes | Registra paciente (genera expediente) |
-| PUT / DELETE | /pacientes/:id | Actualiza / elimina (no elimina si tiene consultas) |
-| GET | /citas?fecha=&medico=&paciente=&estado= | Lista de citas |
-| GET | /citas/:id | Detalle de una cita |
-| POST | /citas | Agenda cita (valida empalmes de horario → 409) |
-| PUT | /citas/:id | Reprograma cita |
-| PATCH | /citas/:id/cancelar | Cancela cita |
-| DELETE | /citas/:id | Elimina cita (no si ya fue atendida) |
-| GET | /consultas?paciente=&medico= | Lista de consultas |
-| GET | /consultas/:id | Detalle de una consulta |
-| POST | /consultas | Registra consulta + genera receta + marca la cita como Atendida |
-| PUT / DELETE | /consultas/:id | Actualiza / elimina (solo el médico autor) |
-| GET | /recetas?paciente= | Lista de recetas |
-| GET | /recetas/:id | Receta completa (médico, paciente, consulta) |
-| POST | /recetas | Crea receta para una consulta sin receta |
-| PUT / DELETE | /recetas/:id | Actualiza / elimina (solo el médico autor) |
-| GET / POST | /medicamentos | Catálogo de medicamentos |
-| GET / PUT / DELETE | /medicamentos/:id | CRUD del catálogo |
-| GET | /reportes/resumen | Indicadores generales |
-| GET | /reportes/consultas-por-medico | consultas + usuarios |
-| GET | /reportes/asistencia-citas | citas + usuarios (% de asistencia) |
-| GET | /reportes/diagnosticos-frecuentes | consultas + pacientes |
-| GET | /reportes/medicamentos-mas-recetados | recetas + medicamentos |
-| GET | /reportes/pacientes-frecuentes | consultas + pacientes |
+| Método | Ruta | Quién | Descripción |
+|---|---|---|---|
+| POST | /auth/medico/login | público | Login de médico → `{ token, rol, usuario }` |
+| POST | /auth/medico/registro | público | Registro de médico |
+| POST | /auth/paciente/login | público | Login de paciente |
+| POST | /auth/paciente/registro | público | El paciente crea su cuenta (genera expediente) |
+| GET | /auth/perfil | ambos | Datos del usuario en sesión |
+| GET | /doctores | ambos | Lista de médicos |
+| GET / PUT / DELETE | /doctores/:id | médico | Ver / editar / eliminar (solo su propia cuenta) |
+| GET | /citas/disponibles?medico=&fecha= | ambos | Horarios libres de un médico en un día |
+| POST | /citas | ambos | Agendar (el paciente agenda para sí mismo) |
+| PATCH | /citas/:id/cancelar | ambos | Cancelar (el paciente solo las suyas) |
+| GET | /citas/mias | paciente | Citas del paciente en sesión |
+| GET | /citas?fecha=&medico=&paciente=&estado= | médico | Lista de citas |
+| GET / PUT / DELETE | /citas/:id | médico | Ver / reprogramar / eliminar |
+| GET | /pacientes?buscar=&estado= | médico | Lista y búsqueda |
+| GET / PUT / DELETE | /pacientes/:id | médico | Ver (por _id o expediente) / editar / eliminar |
+| GET / POST | /consultas | médico | Lista / registrar (crea la receta y marca la cita como Atendida) |
+| GET / PUT / DELETE | /consultas/:id | médico | Ver / editar / eliminar |
+| GET / POST | /recetas | médico | Lista / crear para una consulta sin receta |
+| GET / PUT / DELETE | /recetas/:id | médico | Ver / editar / eliminar |
+| GET / POST | /medicamentos | médico | Catálogo |
+| GET / PUT / DELETE | /medicamentos/:id | médico | Ver / editar / eliminar |
+| GET | /reportes/resumen | médico | Indicadores generales |
+| GET | /reportes/consultas-por-medico | médico | consultas + usuarios |
+| GET | /reportes/asistencia-citas | médico | citas + usuarios |
+| GET | /reportes/diagnosticos-frecuentes | médico | consultas + pacientes |
+| GET | /reportes/medicamentos-mas-recetados | médico | recetas + medicamentos |
+| GET | /reportes/pacientes-frecuentes | médico | consultas + pacientes |
 
-Los reportes aceptan `?desde=AAAA-MM-DD&hasta=AAAA-MM-DD`.
+Los reportes aceptan `?desde=AAAA-MM-DD&hasta=AAAA-MM-DD`. Las citas son de 30 minutos, de 08:00 a 14:30
+(`src/utils/horarios.js`).
 
-## Errores y logs
+## Validaciones, errores y logs
 
-- Validaciones fallidas → `400` con `{ message, errores: [{ campo, mensaje }] }`
+- Cada tabla tiene su archivo en `src/validators/` con funciones que revisan los datos con `if` y regresan la lista
+  de errores. El middleware `validar` responde `400` con el primer error.
 - Sin token o token inválido → `401` · Sin permiso → `403` · No existe → `404` · Conflicto → `409`
-- Todo se registra en `logs/app.log`: excepciones, inicio (`[INICIO]`) y término (`[FIN]`) de procesos críticos
-  (crear, actualizar y eliminar), intentos de login fallidos y tokens rechazados.
+- `logs/app.log` registra excepciones, inicio (`[INICIO]`) y término (`[FIN]`) de procesos críticos y logins fallidos.
