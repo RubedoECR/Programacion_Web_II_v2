@@ -1,24 +1,24 @@
 // Validaciones de backend para el catálogo de medicamentos.
-const { body } = require('express-validator');
-const { idValido } = require('./comunes');
+const c = require('./comunes');
 
 const VIAS = ['Oral', 'Sublingual', 'Intramuscular', 'Intravenosa', 'Tópica', 'Inhalada', 'Otra'];
 
-function reglas(esActualizacion) {
-  const req = (cadena) => (esActualizacion ? cadena.optional() : cadena);
-  return [
-    req(body('nombre')).trim().notEmpty().withMessage('El nombre del medicamento es obligatorio'),
-    body('presentacion').optional().trim(),
-    body('concentracion').optional().trim(),
-    body('via').optional().isIn(VIAS).withMessage('Vía de administración no válida'),
-    body('dosisSugerida').optional().trim(),
-    body('activo').optional().isBoolean().withMessage('Activo debe ser verdadero o falso').toBoolean(),
-  ];
+function revisar(datos, esNuevo) {
+  const errores = [];
+  if (esNuevo || datos.nombre !== undefined) {
+    if (c.estaVacio(datos.nombre)) errores.push('El nombre del medicamento es obligatorio');
+  }
+  if (datos.via !== undefined && !VIAS.includes(datos.via)) errores.push('Vía de administración no válida');
+  if (datos.activo !== undefined && typeof datos.activo !== 'boolean') errores.push('Activo debe ser verdadero o falso');
+  return errores;
 }
 
-module.exports = {
-  crear: reglas(false),
-  actualizar: [idValido, ...reglas(true)],
-  obtener: [idValido],
-  eliminar: [idValido],
-};
+function crear(req) {
+  return revisar(req.body, true);
+}
+
+function actualizar(req) {
+  return c.idEnUrl(req).concat(revisar(req.body, false));
+}
+
+module.exports = { crear, actualizar, obtener: c.idEnUrl, eliminar: c.idEnUrl };

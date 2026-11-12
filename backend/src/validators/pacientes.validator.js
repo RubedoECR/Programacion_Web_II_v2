@@ -1,46 +1,55 @@
 // Validaciones de backend para la tabla de pacientes.
-const { body, param, query } = require('express-validator');
-const { telefonoValido, fechaNoFutura, aArreglo, idValido } = require('./comunes');
+const c = require('./comunes');
 
 const SEXOS = ['Masculino', 'Femenino', 'Otro'];
 const TIPOS_SANGRE = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-// Las mismas reglas sirven para crear (todo obligatorio) y actualizar (todo opcional)
-function reglas(esActualizacion) {
-  const req = (cadena) => (esActualizacion ? cadena.optional() : cadena);
+// Revisa los datos de un paciente.
+// esNuevo = true  → todos los campos obligatorios deben venir
+// esNuevo = false → solo se revisan los campos que sí vienen (actualización)
+function revisarDatos(datos, esNuevo) {
+  const errores = [];
 
-  return [
-    req(body('nombre')).trim().notEmpty().withMessage('El nombre es obligatorio'),
-    req(body('apellidoP')).trim().notEmpty().withMessage('El apellido paterno es obligatorio'),
-    body('apellidoM').optional({ values: 'falsy' }).trim(),
-    req(fechaNoFutura('fechaNacimiento', 'La fecha de nacimiento')),
-    req(body('sexo')).isIn(SEXOS).withMessage('Selecciona un sexo válido'),
-    req(telefonoValido('telefono')),
-    body('correo').optional({ values: 'falsy' }).trim().isEmail().withMessage('El correo no es válido'),
-    body('tipoSangre').optional().isIn(TIPOS_SANGRE).withMessage('Tipo de sangre no válido'),
-    body('direccion').optional().trim(),
-    body('alergias').optional().customSanitizer(aArreglo),
-    telefonoValido('contactoTelefono').optional({ values: 'falsy' }),
-    body('estado').optional().isIn(['Activo', 'Inactivo']).withMessage('Estado no válido'),
-  ];
+  if (esNuevo || datos.nombre !== undefined) {
+    if (c.estaVacio(datos.nombre)) errores.push('El nombre es obligatorio');
+  }
+  if (esNuevo || datos.apellidoP !== undefined) {
+    if (c.estaVacio(datos.apellidoP)) errores.push('El apellido paterno es obligatorio');
+  }
+  if (esNuevo || datos.fechaNacimiento !== undefined) {
+    if (!c.esFecha(datos.fechaNacimiento)) errores.push('La fecha de nacimiento no es válida');
+    else if (c.esFutura(datos.fechaNacimiento)) errores.push('La fecha de nacimiento no puede ser futura');
+  }
+  if (esNuevo || datos.sexo !== undefined) {
+    if (!SEXOS.includes(datos.sexo)) errores.push('Selecciona un sexo válido');
+  }
+  if (esNuevo || datos.telefono !== undefined) {
+    if (!c.esTelefono(datos.telefono || '')) errores.push('El teléfono debe tener al menos 10 dígitos');
+  }
+  if (datos.tipoSangre !== undefined && !TIPOS_SANGRE.includes(datos.tipoSangre)) {
+    errores.push('Tipo de sangre no válido');
+  }
+  if (!c.estaVacio(datos.contactoTelefono) && !c.esTelefono(datos.contactoTelefono)) {
+    errores.push('El teléfono del contacto debe tener al menos 10 dígitos');
+  }
+  if (datos.estado !== undefined && datos.estado !== 'Activo' && datos.estado !== 'Inactivo') {
+    errores.push('Estado no válido');
+  }
+
+  return errores;
 }
 
-// GET /pacientes/:id acepta el _id de Mongo o el expediente (EXP-000001)
-const obtener = [
-  param('id')
-    .custom((v) => /^[a-f\d]{24}$/i.test(v) || /^EXP-\d{6}$/.test(v))
-    .withMessage('Usa el ID o el número de expediente (EXP-000001)'),
-];
+// PUT /pacientes/:id
+function actualizar(req) {
+  const errores = c.idEnUrl(req);
+  return errores.concat(revisarDatos(req.body, false));
+}
 
-const listar = [
-  query('estado').optional().isIn(['Activo', 'Inactivo']).withMessage('Estado no válido'),
-  query('buscar').optional().isString().trim().isLength({ max: 60 }).withMessage('Búsqueda demasiado larga'),
-];
+// GET /pacientes/:id  → acepta el _id o el expediente (EXP-000001)
+function obtener(req) {
+  const id = req.params.id;
+  if (c.esId(id) || /^EXP-\d{6}$/.test(id)) return [];
+  return ['Usa el ID o el número de expediente (EXP-000001)'];
+}
 
-module.exports = {
-  listar,
-  crear: reglas(false),
-  actualizar: [idValido, ...reglas(true)],
-  obtener,
-  eliminar: [idValido],
-};
+module.exports = { revisarDatos, actualizar, obtener, eliminar: c.idEnUrl };

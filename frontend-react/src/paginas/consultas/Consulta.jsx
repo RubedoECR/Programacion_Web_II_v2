@@ -199,10 +199,6 @@ export default function Consulta() {
   };
 
   const seleccionarPacientePorExpediente = (expediente) => {
-    if (expediente === '__nuevo__') {
-      navigate('/paciente/nuevo');
-      return;
-    }
     const encontrado = pacientes.find(p => p.expediente === expediente);
     if (encontrado) {
       aplicarDatosPaciente(encontrado);
@@ -487,10 +483,10 @@ export default function Consulta() {
         <div className="clinical-container" style={{ textAlign: 'center', padding: '3rem' }}>
           <h2>No hay pacientes registrados</h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-            Para iniciar el registro de consultas clínicas, registra tu primer paciente en el sistema.
+            Los pacientes crean su cuenta desde el portal de pacientes. Cuando haya alguno registrado aparecerá aquí.
           </p>
-          <button type="button" className="btn-primary" onClick={() => navigate('/paciente/nuevo')}>
-            + Registrar Primer Paciente
+          <button type="button" className="btn-primary" onClick={() => navigate('/dashboard')}>
+            Ir a la agenda
           </button>
         </div>
       </div>
@@ -520,7 +516,6 @@ export default function Consulta() {
                 {pacientes.map(p => (
                   <option key={p._id} value={p.expediente}>{p.expediente} · {p.nombre}</option>
                 ))}
-                <option value="__nuevo__">+ Registrar nuevo paciente</option>
               </select>
             </div>
           </div>
@@ -563,13 +558,6 @@ export default function Consulta() {
                   📋 Ver Historial Completo
                 </button>
 
-                <button
-                  type="button"
-                  className="btn-banner-action"
-                  onClick={() => navigate(`/paciente/agendar?expediente=${encodeURIComponent(pacienteActual.expediente)}`)}
-                >
-                  📅 Agendar Cita
-                </button>
               </div>
             </div>
 
@@ -584,13 +572,6 @@ export default function Consulta() {
                     onChange={(e) => setBusquedaPaciente(e.target.value)}
                     style={{ flex: 1, padding: '0.45rem 0.75rem', fontSize: '0.85rem' }}
                   />
-                  <button
-                    type="button"
-                    className="btn-banner-action action-primary"
-                    onClick={() => navigate('/paciente/nuevo')}
-                  >
-                    + Registrar Nuevo Paciente
-                  </button>
                 </div>
 
                 <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>

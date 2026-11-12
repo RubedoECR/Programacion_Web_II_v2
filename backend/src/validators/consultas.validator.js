@@ -1,59 +1,66 @@
 // Validaciones de backend para la tabla de consultas.
-const { body, query } = require('express-validator');
-const { idValido, aArreglo } = require('./comunes');
+const c = require('./comunes');
 
-const numero = (campo, min, max, etiqueta) =>
-  body(campo)
-    .optional({ values: 'falsy' })
-    .isFloat({ min, max })
-    .withMessage(`${etiqueta} debe estar entre ${min} y ${max}`)
-    .toFloat();
+const SEVERIDADES = ['Leve', 'Moderado', 'Grave', 'Crítico'];
 
-function reglas(esActualizacion) {
-  const req = (cadena) => (esActualizacion ? cadena.optional() : cadena);
-
-  return [
-    req(body('paciente')).isMongoId().withMessage('Selecciona un paciente válido'),
-    body('cita').optional({ values: 'falsy' }).isMongoId().withMessage('Cita no válida'),
-    body('fecha').optional({ values: 'falsy' }).isISO8601().withMessage('Fecha no válida'),
-    body('severidad').optional().isIn(['Leve', 'Moderado', 'Grave', 'Crítico']).withMessage('Severidad no válida'),
-    body('presion')
-      .optional({ values: 'falsy' })
-      .matches(/^\d{2,3}\/\d{2,3}$/).withMessage('La presión debe tener formato 120/80'),
-    numero('frecuencia', 20, 250, 'La frecuencia cardiaca'),
-    numero('frecuenciaResp', 5, 80, 'La frecuencia respiratoria'),
-    numero('saturacionO2', 50, 100, 'La saturación de oxígeno'),
-    numero('temperatura', 30, 45, 'La temperatura'),
-    numero('peso', 0.5, 400, 'El peso'),
-    numero('talla', 30, 250, 'La talla'),
-    body('diagnosticos').optional().customSanitizer(aArreglo),
-    body('alergias').optional().customSanitizer(aArreglo),
-    body('medicamentos').optional().isArray().withMessage('Los medicamentos deben ser una lista'),
-    body('medicamentos.*.nombre').trim().notEmpty().withMessage('Cada medicamento necesita nombre'),
-    // Al crear, debe haber al menos síntomas o un diagnóstico
-    ...(esActualizacion
-      ? []
-      : [
-          body('sintomas').custom((v, { req: r }) => {
-            const hayDiagnostico = Array.isArray(r.body.diagnosticos) && r.body.diagnosticos.length > 0;
-            if (!String(v || '').trim() && !hayDiagnostico) {
-              throw new Error('Registra al menos los síntomas o un diagnóstico');
-            }
-            return true;
-          }),
-        ]),
-  ];
+// Revisa que un número esté en un rango (si viene vacío no se revisa)
+function revisarNumero(valor, minimo, maximo, etiqueta, errores) {
+  if (c.estaVacio(valor)) return;
+  const numero = Number(valor);
+  if (isNaN(numero) || numero < minimo || numero > maximo) {
+    errores.push(etiqueta + ' debe estar entre ' + minimo + ' y ' + maximo);
+  }
 }
 
-const listar = [
-  query('paciente').optional().isMongoId().withMessage('Paciente inválido'),
-  query('medico').optional().isMongoId().withMessage('Médico inválido'),
-];
+function revisarSignos(datos, errores) {
+  if (!c.estaVacio(datos.presion) && !/^\d{2,3}\/\d{2,3}$/.test(datos.presion)) {
+    errores.push('La presión debe tener formato 120/80');
+  }
+  revisarNumero(datos.frecuencia, 20, 250, 'La frecuencia cardiaca', errores);
+  revisarNumero(datos.frecuenciaResp, 5, 80, 'La frecuencia respiratoria', errores);
+  revisarNumero(datos.saturacionO2, 50, 100, 'La saturación de oxígeno', errores);
+  revisarNumero(datos.temperatura, 30, 45, 'La temperatura', errores);
+  revisarNumero(datos.peso, 0.5, 400, 'El peso', errores);
+  revisarNumero(datos.talla, 30, 250, 'La talla', errores);
+  if (datos.severidad !== undefined && !SEVERIDADES.includes(datos.severidad)) errores.push('Severidad no válida');
+}
 
-module.exports = {
-  listar,
-  crear: reglas(false),
-  actualizar: [idValido, ...reglas(true)],
-  obtener: [idValido],
-  eliminar: [idValido],
-};
+// POST /consultas
+function crear(req) {
+  const datos = req.body;
+  const errores = [];
+
+  if (!c.esId(datos.paciente)) errores.push('Selecciona un paciente válido');
+  if (!c.estaVacio(datos.cita) && !c.esId(datos.cita)) errores.push('La cita no es válida');
+
+  const hayDiagnostico = Array.isArray(datos.diagnosticos) && datos.diagnosticos.length > 0;
+  if (c.estaVacio(datos.sintomas) && !hayDiagnostico) errores.push('Registra al menos los síntomas o un diagnóstico');
+
+  if (datos.medicamentos !== undefined) {
+    if (!Array.isArray(datos.medicamentos)) {
+      errores.push('Los medicamentos deben ser una lista');
+    } else {
+      for (const med of datos.medicamentos) {
+        if (c.estaVacio(med.nombre)) errores.push('Cada medicamento necesita nombre');
+      }
+    }
+  }
+
+  revisarSignos(datos, errores);
+  return errores;
+}
+
+// PUT /consultas/:id
+function actualizar(req) {
+  const errores = c.idEnUrl(req);
+  revisarSignos(req.body, errores);
+  return errores;
+}
+
+function listar(req) {
+  const errores = [];
+  if (req.query.paciente && !c.esId(req.query.paciente)) errores.push('Paciente inválido');
+  return errores;
+}
+
+module.exports = { crear, actualizar, listar, obtener: c.idEnUrl, eliminar: c.idEnUrl };

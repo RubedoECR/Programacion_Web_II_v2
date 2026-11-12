@@ -47,3 +47,26 @@ export function adaptarPaciente(p) {
     fechaRegistro: p.createdAt || '',
   };
 }
+
+// Paciente del API → valores del formulario de edición (componentes/FormularioPaciente.jsx)
+export function pacienteAFormulario(p) {
+  return {
+    correo: '',
+    password: '',
+    confirmarPassword: '',
+    nombre: p.nombre || '',
+    apellidoP: p.apellidoP || '',
+    apellidoM: p.apellidoM || '',
+    fechaNacimiento: fechaInput(p.fechaNacimiento),
+    sexo: p.sexo || '',
+    telefono: p.telefono || '',
+    tipoSangre: p.tipoSangre || '',
+    direccion: p.direccion || '',
+    alergias: (p.alergias || []).join(', '),
+    contactoNombre: p.contactoEmergencia ? p.contactoEmergencia.nombre : '',
+    contactoParentesco: p.contactoEmergencia ? p.contactoEmergencia.parentesco : '',
+    contactoTelefono: p.contactoEmergencia ? p.contactoEmergencia.telefono : '',
+    estado: p.estado || 'Activo',
+  };
+}
+

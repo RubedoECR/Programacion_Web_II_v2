@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';
 import HeaderClinico from '../../componentes/HeaderClinico';
-import { obtenerPacientes } from '../../api/pacientes.api';
+import { obtenerPacientes, eliminarPaciente } from '../../api/pacientes.api';
 import { useAuth } from '../../context/useAuth';
 import { adaptarPaciente, nombreMedico } from '../../utils/formato';
 import doctorAvatar from '../../assets/doctor-avatar.jpg';
@@ -16,10 +16,10 @@ export default function Pacientes() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    let activo = true;
-    obtenerPacientes().then(res => {
-      if (!activo) return;
+  const [mensaje, setMensaje] = useState('');
+
+  function cargarPacientes() {
+    return obtenerPacientes().then(res => {
       if (res.success) {
         setPacientes(res.data.map(p => {
           const plano = adaptarPaciente(p);
@@ -34,8 +34,24 @@ export default function Pacientes() {
       }
       setCargando(false);
     });
-    return () => { activo = false; };
+  }
+
+  useEffect(() => {
+    cargarPacientes();
   }, []);
+
+  async function eliminar(p) {
+    if (!window.confirm('¿Eliminar al paciente ' + p.nombre + ' (' + p.expediente + ')?')) return;
+    const res = await eliminarPaciente(p._id);
+    if (res.success) {
+      setMensaje(res.message);
+      setError('');
+      cargarPacientes();
+    } else {
+      setMensaje('');
+      setError(res.message);
+    }
+  }
 
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
@@ -133,20 +149,15 @@ export default function Pacientes() {
             <button
               type="button"
               className="btn-secondary"
-              style={{ width: '100%', marginBottom: '0.6rem' }}
-              onClick={() => navigate('/paciente/agendar')}
+              style={{ width: '100%' }}
+              onClick={() => navigate('/dashboard')}
             >
-              📅 Agendar Nueva Cita
+              📅 Ver mi agenda
             </button>
 
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ width: '100%' }}
-              onClick={() => navigate('/paciente/nuevo')}
-            >
-              ➕ Registrar Nuevo Paciente
-            </button>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+              Los pacientes crean su propia cuenta desde el portal de pacientes.
+            </p>
           </aside>
 
           {/* Main: Búsqueda y Expedientes */}
@@ -157,6 +168,8 @@ export default function Pacientes() {
                 <span className="icon">🔍</span>
                 <span>Directorio y Búsqueda de Pacientes </span>
               </div>
+              {mensaje && <div className="alert-success">{mensaje}</div>}
+              {error && !cargando && <div className="alert-error" style={{ marginBottom: '0.75rem' }}>{error}</div>}
 
               <div className="search-bar">
                 <input
@@ -250,18 +263,23 @@ export default function Pacientes() {
                               type="button"
                               className="btn-ver-receta"
                               style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
-                              onClick={() => navigate(`/paciente/agendar?expediente=${encodeURIComponent(p.expediente)}`)}
-                              title="Agendar cita para este paciente"
-                            >
-                              📅 Cita
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-ver-receta"
-                              style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
                               onClick={() => navigate(`/historial/${encodeURIComponent(p.expediente)}`)}
                             >
                               Historial
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary btn-chico"
+                              onClick={() => navigate(`/pacientes/${p._id}/editar`)}
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-danger btn-chico"
+                              onClick={() => eliminar(p)}
+                            >
+                              🗑️ Eliminar
                             </button>
                           </div>
                         </td>
