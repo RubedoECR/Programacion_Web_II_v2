@@ -1,7 +1,3 @@
-/* ======================================================
-   ESTILOS DE REGISTRO MEDIVOZ - Medical Professional UI
-====================================================== */
-
 .registro-page {
   min-height: 100vh;
   display: flex;
@@ -12,7 +8,6 @@
   padding-bottom: 3rem;
 }
 
-/* Header & Logo */
 .container-logo {
   text-align: center;
   padding: 2.5rem 1rem 1.5rem;
@@ -42,7 +37,6 @@
   font-weight: 500;
 }
 
-/* Main Container */
 .form-page {
   display: flex;
   justify-content: center;
@@ -91,7 +85,6 @@
   margin: 0.5rem auto 0;
 }
 
-/* Form Fields */
 .Campo {
   display: flex;
   flex-direction: column;
@@ -132,12 +125,10 @@
   box-shadow: 0 0 0 3px var(--primary-focus);
 }
 
-/* Date input custom styling */
 input[type="date"].Text-box {
   color: #334155;
 }
 
-/* File Upload styling */
 .fileup {
   display: block;
   width: 100%;
@@ -173,7 +164,6 @@ input[type="date"].Text-box {
   background: var(--primary-hover);
 }
 
-/* Error validation highlight */
 .campo-invalido {
   border-color: var(--error) !important;
   background-color: #fffaf0 !important;
@@ -186,7 +176,6 @@ input[type="date"].Text-box {
   75% { transform: translateX(4px); }
 }
 
-/* Buttons */
 .Btn_Login {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
   color: #ffffff;
@@ -229,7 +218,6 @@ input[type="date"].Text-box {
   transform: translateY(-1px);
 }
 
-/* Toast Notifications */
 #toast {
   visibility: hidden;
   min-width: 280px;
@@ -262,12 +250,11 @@ input[type="date"].Text-box {
   color: #ffffff;
 }
 
-/* Responsive adjustment */
 @media (max-width: 680px) {
   .Formulario_Registro {
     padding: 2rem 1.5rem;
   }
-  
+
   .Formulario_Registro form {
     grid-template-columns: 1fr;
     gap: 1rem;

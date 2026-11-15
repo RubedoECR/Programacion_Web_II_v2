@@ -1,4 +1,3 @@
-// Registro de pacientes (público): el paciente crea su cuenta para poder agendar citas.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormularioPaciente from '../../componentes/FormularioPaciente';

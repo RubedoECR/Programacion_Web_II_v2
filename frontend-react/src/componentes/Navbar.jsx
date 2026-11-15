@@ -1,4 +1,3 @@
-// Barra de navegación. Muestra opciones distintas para médicos y para pacientes.
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 

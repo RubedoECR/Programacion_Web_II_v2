@@ -1,4 +1,3 @@
-// Catálogo de medicamentos: agregar, editar, activar/desactivar y eliminar.
 import { useState, useEffect } from 'react';
 import Navbar from '../../componentes/Navbar';
 import HeaderClinico from '../../componentes/HeaderClinico';
@@ -16,7 +15,7 @@ const VIAS = ['Oral', 'Sublingual', 'Intramuscular', 'Intravenosa', 'Tópica', '
 export default function Medicamentos() {
   const [medicamentos, setMedicamentos] = useState([]);
   const [form, setForm] = useState(VACIO);
-  const [editandoId, setEditandoId] = useState(null); // null = agregando uno nuevo
+  const [editandoId, setEditandoId] = useState(null);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
 

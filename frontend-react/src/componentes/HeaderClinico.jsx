@@ -1,4 +1,3 @@
-// Encabezado institucional que aparece en las páginas del sistema.
 import { Link } from 'react-router-dom';
 
 export default function HeaderClinico() {

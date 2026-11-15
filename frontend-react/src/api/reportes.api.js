@@ -1,6 +1,5 @@
 import { peticion, queryString } from './cliente';
 
-// rango: { desde: 'AAAA-MM-DD', hasta: 'AAAA-MM-DD' }
 export const obtenerResumen = () => peticion('GET', '/reportes/resumen');
 export const reporteConsultasPorMedico = (rango) => peticion('GET', `/reportes/consultas-por-medico${queryString(rango)}`);
 export const reporteAsistenciaCitas = (rango) => peticion('GET', `/reportes/asistencia-citas${queryString(rango)}`);

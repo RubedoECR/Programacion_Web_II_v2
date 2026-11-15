@@ -1,4 +1,3 @@
-// Login con dos tipos de usuario: médico o paciente.
 import { useState } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { loginMedico, loginPaciente } from '../../api/auth.api';
@@ -6,7 +5,7 @@ import { useAuth } from '../../context/useAuth';
 import { INICIO } from '../../utils/rutas';
 
 export default function Login() {
-  const [tipo, setTipo] = useState('medico'); // 'medico' o 'paciente'
+  const [tipo, setTipo] = useState('medico');
   const [correo, setCorreo] = useState('diego.leal@medivoz.com');
   const [password, setPassword] = useState('Medivoz@2026');
   const [error, setError] = useState('');
@@ -14,7 +13,6 @@ export default function Login() {
   const navigate = useNavigate();
   const sesion = useAuth();
 
-  // Si ya hay sesión, se va directo a su página de inicio
   if (sesion.usuario) {
     return <Navigate to={INICIO[sesion.rol]} replace />;
   }
@@ -120,7 +118,6 @@ export default function Login() {
             {cargando ? 'Ingresando...' : 'Iniciar sesión'}
           </button>
 
-          {/* Cuentas de Acceso Rápido */}
           <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#f8fafc', border: '1px solid var(--border-color, #e2e8f0)', borderRadius: '8px', fontSize: '0.8rem', color: '#475569' }}>
             <div style={{ fontWeight: 600, marginBottom: '0.4rem', color: '#1e293b' }}>
               ⚡ Cuentas de Acceso Rápido ({tipo === 'medico' ? 'Médicos' : 'Pacientes'}):

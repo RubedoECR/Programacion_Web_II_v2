@@ -1,4 +1,3 @@
-// Agenda del médico: sus citas del día con opciones para atender, reprogramar, cancelar o eliminar.
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';
@@ -8,7 +7,6 @@ import { useAuth } from '../../context/useAuth';
 import { hoyISO, nombreCompleto } from '../../utils/formato';
 import '../../estilos/App.css';
 
-// Mismos horarios que el backend (backend/src/utils/horarios.js)
 const HORARIOS = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30'];
 
 export default function Agenda() {
@@ -20,7 +18,6 @@ export default function Agenda() {
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
 
-  // Reprogramación: la cita que se está moviendo y su nueva fecha/hora
   const [moviendo, setMoviendo] = useState(null);
   const [nuevaFecha, setNuevaFecha] = useState('');
   const [nuevaHora, setNuevaHora] = useState('');
@@ -35,7 +32,6 @@ export default function Agenda() {
 
   useEffect(() => {
     cargarCitas(fecha);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fecha]);
 
   function cambiarDia(dia) {
@@ -93,7 +89,6 @@ export default function Agenda() {
     avisar(respuesta);
   }
 
-  // Busca la cita (no cancelada) de un horario; si no hay, regresa la cancelada si existe
   function citaDelHorario(hora) {
     const activa = citas.find((c) => c.hora === hora && c.estado !== 'Cancelada');
     if (activa) return activa;

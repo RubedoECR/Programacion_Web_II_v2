@@ -6,7 +6,6 @@ import '../../estilos/Registro.css';
 export default function Registro() {
   const navigate = useNavigate();
 
-  // Estados para cada uno de los campos
   const [formData, setFormData] = useState({
     nombre: '',
     apellidoP: '',
@@ -74,7 +73,6 @@ export default function Registro() {
       confirmPassword
     } = formData;
 
-    // Validación de campos vacíos
     if (
       !nombre.trim() ||
       !apellidoP.trim() ||
@@ -91,7 +89,6 @@ export default function Registro() {
       return;
     }
 
-    // Validar fecha de nacimiento
     const fecha = new Date(fechaNacimiento);
     const fechaLimite = new Date('2002-01-01');
 
@@ -110,7 +107,6 @@ export default function Registro() {
       return;
     }
 
-    // Validar teléfono mínimo 10 dígitos numéricos
     const numeroLimpio = telefono.replace(/\D/g, '');
     if (numeroLimpio.length < 10) {
       mostrarToast('El número de teléfono debe tener mínimo 10 dígitos.', 'error');
@@ -118,14 +114,12 @@ export default function Registro() {
       return;
     }
 
-    // Validar coincidencia de contraseña
     if (password !== confirmPassword) {
       mostrarToast('Las contraseñas no coinciden.', 'error');
       marcarCampoInvalido('confirmPassword');
       return;
     }
 
-    // Validar formato de contraseña con Regex
     const formatoPassword = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,15}$/;
     if (!formatoPassword.test(password)) {
       mostrarToast(
@@ -136,7 +130,6 @@ export default function Registro() {
       return;
     }
 
-    // Enviar registro al backend
     setCargando(true);
     try {
       const payload = {
@@ -182,7 +175,6 @@ export default function Registro() {
           <form id="formRegistro" onSubmit={handleSubmit}>
             <h1 className="Titulo full-width">Registrarse</h1>
 
-            {/* Nombre */}
             <div className="Campo">
               <label htmlFor="Nombre">Nombre</label>
               <input
@@ -196,7 +188,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Apellido Paterno */}
             <div className="Campo">
               <label htmlFor="Ape_P">Apellido Paterno</label>
               <input
@@ -210,7 +201,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Apellido Materno */}
             <div className="Campo">
               <label htmlFor="Ape_M">Apellido Materno</label>
               <input
@@ -224,7 +214,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Especialidad */}
             <div className="Campo">
               <label htmlFor="Especialidad">Especialidad</label>
               <input
@@ -238,7 +227,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Teléfono */}
             <div className="Campo">
               <label htmlFor="Telefono">Número de teléfono</label>
               <input
@@ -252,7 +240,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Fecha de nacimiento */}
             <div className="Campo">
               <label htmlFor="Fecha_Nacimiento">Fecha de nacimiento</label>
               <input
@@ -266,7 +253,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Correo Electrónico */}
             <div className="Campo">
               <label htmlFor="Corre_Electronico">Correo Electrónico</label>
               <input
@@ -280,7 +266,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Cargar Cédula */}
             <div className="Campo">
               <label htmlFor="Cedula">Cargar Cedula</label>
               <input
@@ -293,7 +278,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Contraseña */}
             <div className="Campo full-width">
               <label htmlFor="password">Contraseña</label>
               <input
@@ -307,7 +291,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Confirmar Contraseña */}
             <div className="Campo full-width">
               <label htmlFor="confirm_password">Confirmar Contraseña</label>
               <input
@@ -321,7 +304,6 @@ export default function Registro() {
               />
             </div>
 
-            {/* Botones */}
             <div className="full-width" style={{ display: 'flex', gap: '10px' }}>
               <button className="Btn_Login" type="submit" disabled={cargando} style={{ flex: 1 }}>
                 {cargando ? 'Registrando...' : 'Enviar Registro'}
@@ -339,7 +321,6 @@ export default function Registro() {
         </div>
       </div>
 
-      {/* Toast de notificaciones */}
       <div
         id="toast"
         className={`${toast.visible ? 'show' : ''} ${toast.tipo === 'error' ? 'toast-error' : ''}`}

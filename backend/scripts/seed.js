@@ -1,8 +1,3 @@
-// Carga datos iniciales en la base de datos.
-//
-//   npm run seed          → agrega lo que falte (no borra nada)
-//   npm run seed:reset    → BORRA las 6 colecciones y carga datos de prueba limpios
-//
 require('dotenv').config();
 const mongoose = require('mongoose');
 
@@ -37,7 +32,6 @@ const PACIENTES = [
   { expediente: 'EXP-000003', nombre: 'Jorge', apellidoP: 'Ramírez', apellidoM: 'Treviño', fechaNacimiento: '1968-01-22', sexo: 'Masculino', telefono: '8144556677', correo: 'jorge.ramirez@correo.com', password: 'Paciente@2026', tipoSangre: 'B+', direccion: 'Col. Mitras Centro, Monterrey, NL', alergias: ['Sulfas'], contactoEmergencia: { nombre: 'Rosa Treviño', parentesco: 'Hermana', telefono: '8155667788' } },
 ];
 
-// Fecha AAAA-MM-DD sumando días a hoy (negativo = días atrás)
 function fechaConDias(dias) {
   const d = new Date();
   d.setDate(d.getDate() + dias);
@@ -79,7 +73,6 @@ async function main() {
     if (paciente) pacientes.push(paciente);
   }
 
-  // Citas, consultas y recetas de ejemplo solo en modo --reset
   if (BORRAR_TODO) {
     const [diego, edgar] = medicos;
     const [carlos, ana, jorge] = pacientes;

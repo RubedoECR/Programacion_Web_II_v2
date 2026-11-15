@@ -1,4 +1,3 @@
-// Rutas del catálogo de medicamentos: /api/medicamentos
 const express = require('express');
 const ctrl = require('../controllers/medicamentos.controller');
 const v = require('../validators/medicamentos.validator');

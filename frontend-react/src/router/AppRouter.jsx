@@ -1,16 +1,12 @@
-// ROUTER DEL NAVEGADOR: qué página se muestra en cada URL.
-// (El router del API está en backend/src/routes/index.js)
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import RutaProtegida from '../componentes/RutaProtegida';
 import { INICIO } from '../utils/rutas';
 import { useAuth } from '../context/useAuth';
 
-// Públicas
 import Login from '../paginas/auth/Login';
 import Registro from '../paginas/auth/Registro';
 import RegistroPaciente from '../paginas/auth/RegistroPaciente';
 
-// Médico
 import Agenda from '../paginas/citas/Agenda';
 import Consulta from '../paginas/consultas/Consulta';
 import EditarConsulta from '../paginas/consultas/EditarConsulta';
@@ -22,11 +18,9 @@ import Reportes from '../paginas/reportes/Reportes';
 import Medicamentos from '../paginas/medicamentos/Medicamentos';
 import MiPerfil from '../paginas/auth/MiPerfil';
 
-// Paciente
 import AgendarCita from '../paginas/portal/AgendarCita';
 import MisCitas from '../paginas/portal/MisCitas';
 
-// "/" manda a la página de inicio según quién inició sesión
 function Inicio() {
   const { rol } = useAuth();
   return <Navigate to={INICIO[rol] || '/login'} replace />;
@@ -41,7 +35,6 @@ export default function AppRouter() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/registro-paciente" element={<RegistroPaciente />} />
 
-        {/* Solo médicos */}
         <Route element={<RutaProtegida rol="medico" />}>
           <Route path="/dashboard" element={<Agenda />} />
           <Route path="/consulta" element={<Consulta />} />
@@ -56,7 +49,6 @@ export default function AppRouter() {
           <Route path="/mi-perfil" element={<MiPerfil />} />
         </Route>
 
-        {/* Solo pacientes */}
         <Route element={<RutaProtegida rol="paciente" />}>
           <Route path="/portal/agendar" element={<AgendarCita />} />
           <Route path="/portal/mis-citas" element={<MisCitas />} />

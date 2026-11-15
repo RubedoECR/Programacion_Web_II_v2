@@ -1,7 +1,3 @@
-// Formulario de datos del paciente.
-// Se usa en dos lugares:
-//  - Registro del paciente (conCuenta = true → pide también correo y contraseña)
-//  - Edición del paciente por el médico (conCuenta = false → incluye el estado Activo/Inactivo)
 import { useState } from 'react';
 
 const VACIO = {
@@ -23,7 +19,6 @@ const VACIO = {
   confirmarPassword: '',
 };
 
-// Validaciones del lado del frontend (el backend vuelve a validar)
 function revisar(form, conCuenta) {
   if (form.nombre.trim() === '') return 'El nombre es obligatorio.';
   if (form.apellidoP.trim() === '') return 'El apellido paterno es obligatorio.';
@@ -65,7 +60,6 @@ export default function FormularioPaciente({ titulo, textoBoton, conCuenta, valo
     }
   }
 
-  // Pequeño ayudante para no repetir el mismo bloque en cada campo
   function campo(nombre, etiqueta, tipo = 'text', placeholder = '') {
     return (
       <div className="Campo">

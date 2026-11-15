@@ -1,4 +1,3 @@
-// El médico edita los datos de un paciente.
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';

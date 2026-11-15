@@ -1,4 +1,3 @@
-// Validaciones de backend para la tabla de citas.
 const c = require('./comunes');
 const { HORARIOS, fechaDeHoy } = require('../utils/horarios');
 
@@ -10,7 +9,6 @@ function revisarFechaYHora(fecha, hora) {
   return errores;
 }
 
-// GET /citas/disponibles?medico=&fecha=
 function disponibles(req) {
   const errores = [];
   if (!c.esId(req.query.medico)) errores.push('Selecciona un médico');
@@ -18,13 +16,11 @@ function disponibles(req) {
   return errores;
 }
 
-// POST /citas
 function crear(req) {
   const datos = req.body;
   let errores = [];
 
   if (!c.esId(datos.medico)) errores.push('Selecciona un médico');
-  // Cuando agenda el médico debe indicar el paciente; cuando agenda el paciente se toma de su sesión
   if (req.usuario.rol === 'medico' && !c.esId(datos.paciente)) errores.push('Selecciona un paciente');
   errores = errores.concat(revisarFechaYHora(datos.fecha, datos.hora));
   if (datos.motivo && datos.motivo.length > 300) errores.push('El motivo es demasiado largo (máximo 300 caracteres)');
@@ -32,13 +28,11 @@ function crear(req) {
   return errores;
 }
 
-// PUT /citas/:id  (reprogramar)
 function reprogramar(req) {
   const errores = c.idEnUrl(req);
   return errores.concat(revisarFechaYHora(req.body.fecha, req.body.hora));
 }
 
-// GET /citas?fecha=&medico=&paciente=&estado=
 function listar(req) {
   const q = req.query;
   const errores = [];

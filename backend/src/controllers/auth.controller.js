@@ -1,4 +1,3 @@
-// Controlador de autenticación: login y registro de médicos y de pacientes.
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 const Paciente = require('../models/Paciente');
@@ -11,13 +10,11 @@ function generarToken(id, rol) {
   });
 }
 
-// POST /api/auth/medico/login
 async function loginMedico(req, res, next) {
   try {
     const correo = req.body.correo.trim().toLowerCase();
     const medico = await Usuario.findOne({ email: correo });
 
-    // Mismo mensaje en todos los casos para no revelar qué correos existen
     if (!medico || medico.password !== req.body.password || medico.activo === false) {
       logger.warn('Login de médico fallido', { correo: correo });
       return res.status(401).json({ success: false, message: 'Correo o contraseña incorrectos' });
@@ -34,7 +31,6 @@ async function loginMedico(req, res, next) {
   }
 }
 
-// POST /api/auth/paciente/login
 async function loginPaciente(req, res, next) {
   try {
     const correo = req.body.correo.trim().toLowerCase();
@@ -59,7 +55,6 @@ async function loginPaciente(req, res, next) {
   }
 }
 
-// POST /api/auth/medico/registro
 async function registroMedico(req, res, next) {
   try {
     const email = req.body.email.trim().toLowerCase();
@@ -87,7 +82,6 @@ async function registroMedico(req, res, next) {
   }
 }
 
-// POST /api/auth/paciente/registro
 async function registroPaciente(req, res, next) {
   try {
     const correo = req.body.correo.trim().toLowerCase();
@@ -109,7 +103,6 @@ async function registroPaciente(req, res, next) {
   }
 }
 
-// GET /api/auth/perfil  → datos del usuario en sesión (médico o paciente)
 async function perfil(req, res, next) {
   try {
     let usuario;

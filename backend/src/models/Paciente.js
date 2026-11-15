@@ -1,5 +1,3 @@
-// Modelo: Paciente. Colección "pacientes".
-// El paciente se registra solo desde el portal, con su correo y contraseña.
 const mongoose = require('mongoose');
 
 const pacienteSchema = new mongoose.Schema(
@@ -40,7 +38,6 @@ pacienteSchema.virtual('nombreCompleto').get(function () {
   return [this.nombre, this.apellidoP, this.apellidoM].filter(Boolean).join(' ');
 });
 
-// Edad: años cumplidos a hoy
 pacienteSchema.virtual('edad').get(function () {
   if (!this.fechaNacimiento) return null;
   const hoy = new Date();

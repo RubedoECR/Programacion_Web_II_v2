@@ -1,11 +1,9 @@
-// Controlador de recetas médicas.
 const Receta = require('../models/Receta');
 const Consulta = require('../models/Consulta');
 
 const DATOS_PACIENTE = 'expediente nombre apellidoP apellidoM fechaNacimiento sexo alergias';
 const DATOS_MEDICO = 'nombre apellidoP apellidoM especialidad cedula telefono email';
 
-// GET /api/recetas?paciente=
 async function listar(req, res, next) {
   try {
     const filtro = {};
@@ -21,7 +19,6 @@ async function listar(req, res, next) {
   }
 }
 
-// GET /api/recetas/:id
 async function obtener(req, res, next) {
   try {
     const receta = await Receta.findById(req.params.id)
@@ -37,7 +34,6 @@ async function obtener(req, res, next) {
   }
 }
 
-// POST /api/recetas   (para una consulta que se quedó sin receta)
 async function crear(req, res, next) {
   try {
     const consulta = await Consulta.findById(req.body.consulta);
@@ -63,7 +59,6 @@ async function crear(req, res, next) {
   }
 }
 
-// PUT /api/recetas/:id   (medicamentos e indicaciones)
 async function actualizar(req, res, next) {
   try {
     const receta = await Receta.findById(req.params.id);
@@ -80,7 +75,6 @@ async function actualizar(req, res, next) {
   }
 }
 
-// DELETE /api/recetas/:id
 async function eliminar(req, res, next) {
   try {
     const receta = await Receta.findByIdAndDelete(req.params.id);

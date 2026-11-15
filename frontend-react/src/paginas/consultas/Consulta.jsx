@@ -28,7 +28,6 @@ const SUGERENCIAS_DIAGNOSTICOS = [
   'Lumbalgia mecánica aguda'
 ];
 
-
 function hoyISO() {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -57,31 +56,24 @@ function formatearDictado(texto) {
 
 export default function Consulta() {
   const navigate = useNavigate();
-  const { id } = useParams(); // expediente o _id del paciente (opcional)
+  const { id } = useParams();
   const location = useLocation();
   const { usuario } = useAuth();
 
-  // Catálogo de medicamentos (colección "medicamentos") para las plantillas rápidas
   const [catalogo, setCatalogo] = useState([]);
-  // Si se llegó desde la agenda, la consulta queda ligada a esa cita
   const [citaId, setCitaId] = useState(location.state?.cita?.id || null);
 
-  // Pacientes activos para elegir
   const [pacientes, setPacientes] = useState([]);
   const [cargandoPacientes, setCargandoPacientes] = useState(true);
 
-  // Paciente seleccionado actualmente
   const [pacienteActual, setPacienteActual] = useState(null);
   const [mostrarSelectorPaciente, setMostrarSelectorPaciente] = useState(false);
   const [busquedaPaciente, setBusquedaPaciente] = useState('');
 
-  // Consultas registradas (desde el API)
   const [registros, setRegistros] = useState([]);
 
-  // Pestaña de historial en la parte inferior ('paciente' o 'todos')
   const [tabHistorial, setTabHistorial] = useState('paciente');
 
-  // Estado del formulario clínico
   const [form, setForm] = useState({
     paciente: '',
     medico: nombreMedico(usuario),
@@ -101,35 +93,28 @@ export default function Consulta() {
     talla: '172',
   });
 
-  // Diagnósticos
   const [diagnosticos, setDiagnosticos] = useState([]);
   const [nuevoDiagnostico, setNuevoDiagnostico] = useState('');
 
-  // Medicamentos
   const [medicamentos, setMedicamentos] = useState([]);
   const [medNombre, setMedNombre] = useState('');
   const [medDosis, setMedDosis] = useState('');
 
-  // Alergias
   const [alergias, setAlergias] = useState([]);
   const [nuevaAlergia, setNuevaAlergia] = useState('');
   const [sinAlergias, setSinAlergias] = useState(false);
 
-  // Archivos adjuntos
   const [archivos, setArchivos] = useState([]);
 
-  // Notificaciones y validaciones
   const [toast, setToast] = useState({ mensaje: '', tipo: '', visible: false });
   const [campoInvalido, setCampoInvalido] = useState('');
 
-  // Dictado por voz
   const [campoActivo, setCampoActivo] = useState('sintomas');
   const [escuchando, setEscuchando] = useState(false);
   const [liveText, setLiveText] = useState('');
   const [micError, setMicError] = useState('');
   const recognitionRef = useRef(null);
 
-  // Cargar pacientes activos, consultas registradas y catálogo de medicamentos
   useEffect(() => {
     let activo = true;
     Promise.all([obtenerPacientes({ estado: 'Activo' }), obtenerConsultas(), obtenerMedicamentos(true)]).then(
@@ -144,8 +129,6 @@ export default function Consulta() {
     return () => { activo = false; };
   }, []);
 
-  // Seleccionar el paciente indicado por la URL o por la página anterior.
-  // Si no se encuentra, NO se elige otro: el médico debe seleccionarlo.
   useEffect(() => {
     if (pacientes.length === 0) return;
 
@@ -156,7 +139,6 @@ export default function Consulta() {
     else if (buscado) mostrarToast(`No se encontró el paciente ${buscado}. Selecciónalo de la lista.`, 'error');
   }, [id, location.state, pacientes]);
 
-  // Precargar alergias del paciente seleccionado
   function aplicarDatosPaciente(p) {
     setPacienteActual(p);
     setForm(prev => ({ ...prev, paciente: p.expediente }));
@@ -166,7 +148,6 @@ export default function Consulta() {
     setSinAlergias(alergiasPaciente.length === 0);
   }
 
-  // Cálculo de IMC
   const imcData = useMemo(() => {
     const pesoNum = parseFloat(form.peso);
     const tallaNum = parseFloat(form.talla);
@@ -207,7 +188,6 @@ export default function Consulta() {
     }
   };
 
-  // Reconocimiento de voz
   const detenerMic = () => {
     if (recognitionRef.current) {
       try {
@@ -216,7 +196,6 @@ export default function Consulta() {
         recognitionRef.current.onend = null;
         recognitionRef.current.stop();
       } catch {
-        // Ignorar
       }
       recognitionRef.current = null;
     }
@@ -316,7 +295,6 @@ export default function Consulta() {
     }
   };
 
-  // Diagnósticos
   const agregarDiagnostico = (textoDirecto) => {
     const diag = (textoDirecto || nuevoDiagnostico).trim();
     if (!diag) return;
@@ -330,11 +308,9 @@ export default function Consulta() {
     setDiagnosticos(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // Medicamentos
   const agregarMedicamento = (farmacoRapido) => {
     const nombre = (farmacoRapido?.nombre || medNombre).trim();
     const dosis = (farmacoRapido?.dosisSugerida || medDosis).trim();
-    // Si el nombre coincide con el catálogo, se guarda la referencia al medicamento
     const delCatalogo = farmacoRapido || catalogo.find(m => m.nombre.toLowerCase() === nombre.toLowerCase());
 
     if (!nombre) {
@@ -352,7 +328,6 @@ export default function Consulta() {
     setMedicamentos(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // Alergias
   const agregarAlergia = () => {
     if (sinAlergias || !nuevaAlergia.trim()) return;
     setAlergias(prev => [...prev, nuevaAlergia.trim()]);
@@ -363,7 +338,6 @@ export default function Consulta() {
     setAlergias(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // Archivos
   const adjuntarArchivo = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -373,14 +347,12 @@ export default function Consulta() {
     }
   };
 
-  // Guardar consulta directamente
   const guardarRegistroConsulta = async (redireccionarAReceta = false) => {
     if (!pacienteActual) {
       mostrarToast('Selecciona un paciente antes de guardar.', 'error');
       return;
     }
 
-    // El médico NO se envía: el backend lo toma del token de la sesión
     const res = await guardarConsulta({
       paciente: pacienteActual._id,
       cita: citaId,
@@ -410,7 +382,7 @@ export default function Consulta() {
 
     const { consulta, receta } = res.data;
     setRegistros(prev => [{ ...consulta, receta: { _id: receta._id, folio: receta.folio } }, ...prev]);
-    setCitaId(null); // la cita ya quedó atendida
+    setCitaId(null);
     mostrarToast('Consulta guardada exitosamente.');
 
     if (redireccionarAReceta) {
@@ -499,7 +471,6 @@ export default function Consulta() {
       <HeaderClinico />
 
       <div className="clinical-container">
-        {/* Si aún no hay paciente, se pide elegirlo (nunca se toma uno por defecto) */}
         {!pacienteActual && (
           <div className="clinical-card" style={{ marginBottom: '1.5rem' }}>
             <div className="card-title">
@@ -521,7 +492,6 @@ export default function Consulta() {
           </div>
         )}
 
-        {/* FICHA CLÍNICA DEL PACIENTE */}
         {pacienteActual && (
           <div className="patient-summary-banner">
             <div className="patient-banner-top">
@@ -561,7 +531,6 @@ export default function Consulta() {
               </div>
             </div>
 
-            {/* Selector desplegable de pacientes */}
             {mostrarSelectorPaciente && (
               <div className="patient-switch-drawer">
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -602,7 +571,6 @@ export default function Consulta() {
               </div>
             )}
 
-            {/* Metadatos demográficos del paciente */}
             <div className="patient-meta-grid">
               <div className="meta-item">
                 <span className="meta-item-label">Edad / Sexo</span>
@@ -630,7 +598,6 @@ export default function Consulta() {
               </div>
             </div>
 
-            {/* Alerta de Alergias Reales */}
             {alergias.length > 0 && !sinAlergias ? (
               <div className="patient-allergy-alert has-allergies">
                 <span>⚠️</span>
@@ -647,7 +614,6 @@ export default function Consulta() {
           </div>
         )}
 
-        {/* BARRA INTELIGENTE DE DICTADO */}
         <div className={`smart-voice-bar ${escuchando ? 'is-listening' : ''}`}>
           <div className="voice-status-indicator">
             <button
@@ -694,11 +660,9 @@ export default function Consulta() {
           )}
         </div>
 
-        {/* CUERPO PRINCIPAL DE LA CONSULTA */}
         <div className="consultation-layout">
           <main style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-            {/* Tarjeta 1: Datos de la Atención y Signos Vitales */}
             <div className="clinical-card">
               <div className="clinical-card-header">
                 <div className="clinical-card-header-title">
@@ -885,7 +849,6 @@ export default function Consulta() {
               )}
             </div>
 
-            {/* Tarjeta 2: Anamnesis y Exploración Física */}
             <div className="clinical-card">
               <div className="clinical-card-header">
                 <div className="clinical-card-header-title">
@@ -972,7 +935,6 @@ export default function Consulta() {
               </div>
             </div>
 
-            {/* Tarjeta 3: Diagnósticos y Alergias */}
             <div className="clinical-card">
               <div className="clinical-card-header">
                 <div className="clinical-card-header-title">
@@ -1090,7 +1052,6 @@ export default function Consulta() {
               </div>
             </div>
 
-            {/* Tarjeta 4: Prescripción Médica y Receta */}
             <div className="clinical-card">
               <div className="clinical-card-header">
                 <div className="clinical-card-header-title">
@@ -1205,7 +1166,6 @@ export default function Consulta() {
             </div>
           </main>
 
-          {/* SIDEBAR CLÍNICO */}
           <aside className="consultation-summary-panel">
             <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em' }}>
@@ -1302,7 +1262,6 @@ export default function Consulta() {
           </aside>
         </div>
 
-        {/* CONSULTAS GUARDADAS EN MONGODB ATLAS */}
         <div className="clinical-card records-section" style={{ marginTop: '2rem' }}>
           <div className="consultation-tabs-nav">
             <button

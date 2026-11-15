@@ -1,4 +1,3 @@
-// Rutas de recetas: /api/recetas
 const express = require('express');
 const ctrl = require('../controllers/recetas.controller');
 const v = require('../validators/recetas.validator');

@@ -15,11 +15,9 @@ async function main() {
     const db = client.db();
     console.log('Conectado a la base de datos:', db.databaseName);
 
-    // Listar colecciones existentes
     const existingColls = (await db.listCollections().toArray()).map(c => c.name);
     console.log('Colecciones existentes antes de inicializar:', existingColls);
 
-    // Definición de las colecciones que debe tener MediVoz
     const requiredCollections = [
       {
         name: 'usuarios',
@@ -69,7 +67,6 @@ async function main() {
         console.log(`[=] La colección "${collInfo.name}" ya existía.`);
       }
 
-      // Crear índices para optimizar búsquedas y garantizar unicidad
       const coll = db.collection(collInfo.name);
       for (const idx of collInfo.indexes) {
         try {
@@ -82,7 +79,6 @@ async function main() {
       }
     }
 
-    // Colecciones finales
     const finalColls = (await db.listCollections().toArray()).map(c => c.name);
     console.log('\n--- Colecciones activas en MongoDB Atlas ---');
     console.log(finalColls);

@@ -1,12 +1,8 @@
-// Validaciones de backend para la tabla de pacientes.
 const c = require('./comunes');
 
 const SEXOS = ['Masculino', 'Femenino', 'Otro'];
 const TIPOS_SANGRE = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-// Revisa los datos de un paciente.
-// esNuevo = true  → todos los campos obligatorios deben venir
-// esNuevo = false → solo se revisan los campos que sí vienen (actualización)
 function revisarDatos(datos, esNuevo) {
   const errores = [];
 
@@ -39,13 +35,11 @@ function revisarDatos(datos, esNuevo) {
   return errores;
 }
 
-// PUT /pacientes/:id
 function actualizar(req) {
   const errores = c.idEnUrl(req);
   return errores.concat(revisarDatos(req.body, false));
 }
 
-// GET /pacientes/:id  → acepta el _id o el expediente (EXP-000001)
 function obtener(req) {
   const id = req.params.id;
   if (c.esId(id) || /^EXP-\d{6}$/.test(id)) return [];

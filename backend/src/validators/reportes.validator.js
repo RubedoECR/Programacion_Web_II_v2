@@ -1,4 +1,3 @@
-// Validaciones de los filtros de reportes (?desde=AAAA-MM-DD&hasta=AAAA-MM-DD)
 const c = require('./comunes');
 
 function rango(req) {

@@ -1,5 +1,3 @@
-// Controlador de consultas médicas.
-// Al crear una consulta se crea su receta y, si viene de una cita, la cita pasa a "Atendida".
 const Consulta = require('../models/Consulta');
 const Receta = require('../models/Receta');
 const Paciente = require('../models/Paciente');
@@ -11,7 +9,6 @@ const CAMPOS = [
   'sintomas', 'diagnosticos', 'alergias', 'notas',
 ];
 
-// Copia del body solo los campos de la consulta
 function datosDeLaConsulta(body) {
   const datos = {};
   for (const campo of CAMPOS) {
@@ -20,14 +17,12 @@ function datosDeLaConsulta(body) {
   return datos;
 }
 
-// IMC = peso / (talla en metros)²
 function calcularImc(peso, talla) {
   if (!peso || !talla) return undefined;
   const metros = talla / 100;
   return Math.round((peso / (metros * metros)) * 10) / 10;
 }
 
-// Trae la consulta con el paciente, el médico y el folio de su receta
 function buscarCompleta(filtro) {
   return Consulta.find(filtro)
     .populate('paciente', 'expediente nombre apellidoP apellidoM fechaNacimiento sexo tipoSangre')
@@ -36,7 +31,6 @@ function buscarCompleta(filtro) {
     .sort({ fecha: -1 });
 }
 
-// GET /api/consultas?paciente=
 async function listar(req, res, next) {
   try {
     const filtro = {};
@@ -48,7 +42,6 @@ async function listar(req, res, next) {
   }
 }
 
-// GET /api/consultas/:id
 async function obtener(req, res, next) {
   try {
     const consultas = await buscarCompleta({ _id: req.params.id });
@@ -61,7 +54,6 @@ async function obtener(req, res, next) {
   }
 }
 
-// POST /api/consultas
 async function crear(req, res, next) {
   try {
     const paciente = await Paciente.findById(req.body.paciente);
@@ -85,7 +77,7 @@ async function crear(req, res, next) {
 
     const datos = datosDeLaConsulta(req.body);
     datos.paciente = paciente._id;
-    datos.medico = req.usuario.id; // el médico sale del token, no del formulario
+    datos.medico = req.usuario.id;
     datos.cita = cita ? cita._id : null;
     datos.imc = calcularImc(datos.peso, datos.talla);
 
@@ -116,7 +108,6 @@ async function crear(req, res, next) {
   }
 }
 
-// PUT /api/consultas/:id
 async function actualizar(req, res, next) {
   try {
     const consulta = await Consulta.findById(req.params.id);
@@ -133,7 +124,6 @@ async function actualizar(req, res, next) {
   }
 }
 
-// DELETE /api/consultas/:id   (borra también su receta y la cita vuelve a "Confirmada")
 async function eliminar(req, res, next) {
   try {
     const consulta = await Consulta.findById(req.params.id);

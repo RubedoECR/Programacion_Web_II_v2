@@ -1,4 +1,3 @@
-// Rutas de reportes: /api/reportes   (todas aceptan ?desde=AAAA-MM-DD&hasta=AAAA-MM-DD)
 const express = require('express');
 const ctrl = require('../controllers/reportes.controller');
 const v = require('../validators/reportes.validator');

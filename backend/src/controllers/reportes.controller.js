@@ -1,12 +1,9 @@
-// Controlador de reportes: consultas que cruzan varias colecciones ($lookup)
-// y devuelven indicadores para tomar decisiones.
 const Consulta = require('../models/Consulta');
 const Cita = require('../models/Cita');
 const Receta = require('../models/Receta');
 const Paciente = require('../models/Paciente');
 const { fechaDeHoy } = require('../utils/horarios');
 
-// ?desde=AAAA-MM-DD&hasta=AAAA-MM-DD  →  filtro por fecha (Date)
 function rangoFechas(query, campo = 'fecha') {
   const rango = {};
   if (query.desde) rango.$gte = new Date(`${query.desde}T00:00:00`);
@@ -18,7 +15,6 @@ const nombreMedico = {
   $trim: { input: { $concat: ['$medico.nombre', ' ', { $ifNull: ['$medico.apellidoP', ''] }] } },
 };
 
-// 1) Consultas por médico: total, pacientes distintos y casos graves (consultas + usuarios)
 async function consultasPorMedico(req, res, next) {
   try {
     const data = await Consulta.aggregate([
@@ -52,7 +48,6 @@ async function consultasPorMedico(req, res, next) {
   }
 }
 
-// 2) Asistencia a citas por médico: confirmadas, atendidas, canceladas y % de asistencia (citas + usuarios)
 async function asistenciaCitas(req, res, next) {
   try {
     const filtro = {};
@@ -100,7 +95,6 @@ async function asistenciaCitas(req, res, next) {
   }
 }
 
-// 3) Diagnósticos más frecuentes y a cuántos pacientes afectan (consultas + pacientes)
 async function diagnosticosFrecuentes(req, res, next) {
   try {
     const data = await Consulta.aggregate([
@@ -127,7 +121,6 @@ async function diagnosticosFrecuentes(req, res, next) {
   }
 }
 
-// 4) Medicamentos más recetados (recetas + medicamentos del catálogo)
 async function medicamentosMasRecetados(req, res, next) {
   try {
     const data = await Receta.aggregate([
@@ -162,7 +155,6 @@ async function medicamentosMasRecetados(req, res, next) {
   }
 }
 
-// 5) Pacientes con más consultas y su última visita (consultas + pacientes)
 async function pacientesFrecuentes(req, res, next) {
   try {
     const data = await Consulta.aggregate([
@@ -189,7 +181,6 @@ async function pacientesFrecuentes(req, res, next) {
   }
 }
 
-// Resumen para el dashboard: indicadores generales
 async function resumen(req, res, next) {
   try {
     const hoy = fechaDeHoy();

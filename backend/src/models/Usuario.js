@@ -1,4 +1,3 @@
-// Modelo: Usuario (médico). Colección "usuarios".
 const mongoose = require('mongoose');
 
 const usuarioSchema = new mongoose.Schema(
@@ -18,7 +17,6 @@ const usuarioSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: {
       virtuals: true,
-      // La contraseña nunca se manda al frontend
       transform: (doc, ret) => {
         delete ret.password;
         delete ret.__v;

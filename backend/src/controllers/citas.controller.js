@@ -1,6 +1,3 @@
-// Controlador de citas médicas.
-// Las citas usan horarios fijos de 30 minutos (utils/horarios.js), así que un horario
-// está ocupado si ya hay una cita (no cancelada) con el mismo médico, fecha y hora.
 const Cita = require('../models/Cita');
 const Usuario = require('../models/Usuario');
 const Paciente = require('../models/Paciente');
@@ -9,7 +6,6 @@ const { HORARIOS, fechaDeHoy, horaActual } = require('../utils/horarios');
 const DATOS_PACIENTE = 'expediente nombre apellidoP apellidoM telefono';
 const DATOS_MEDICO = 'nombre apellidoP apellidoM especialidad';
 
-// Regresa la lista de horarios libres de un médico en una fecha
 async function horariosLibres(medicoId, fecha) {
   const citas = await Cita.find({ medico: medicoId, fecha: fecha, estado: { $ne: 'Cancelada' } });
   const ocupados = citas.map((cita) => cita.hora);
@@ -24,7 +20,6 @@ async function horariosLibres(medicoId, fecha) {
   return libres;
 }
 
-// GET /api/citas/disponibles?medico=&fecha=
 async function disponibles(req, res, next) {
   try {
     const libres = await horariosLibres(req.query.medico, req.query.fecha);
@@ -34,7 +29,6 @@ async function disponibles(req, res, next) {
   }
 }
 
-// GET /api/citas/mias   (paciente: sus propias citas)
 async function mias(req, res, next) {
   try {
     const citas = await Cita.find({ paciente: req.usuario.id })
@@ -46,7 +40,6 @@ async function mias(req, res, next) {
   }
 }
 
-// GET /api/citas?fecha=&medico=&paciente=&estado=   (médico)
 async function listar(req, res, next) {
   try {
     const filtro = {};
@@ -65,7 +58,6 @@ async function listar(req, res, next) {
   }
 }
 
-// GET /api/citas/:id
 async function obtener(req, res, next) {
   try {
     const cita = await Cita.findById(req.params.id).populate('paciente', DATOS_PACIENTE).populate('medico', DATOS_MEDICO);
@@ -78,10 +70,8 @@ async function obtener(req, res, next) {
   }
 }
 
-// POST /api/citas   (paciente o médico)
 async function crear(req, res, next) {
   try {
-    // Si agenda el paciente, la cita es para él mismo
     let pacienteId = req.body.paciente;
     if (req.usuario.rol === 'paciente') pacienteId = req.usuario.id;
 
@@ -101,7 +91,6 @@ async function crear(req, res, next) {
       return res.status(409).json({ success: false, message: 'Ese horario ya no está disponible, elige otro' });
     }
 
-    // El paciente no puede tener dos citas a la misma hora
     const choque = await Cita.findOne({ paciente: pacienteId, fecha: fecha, hora: hora, estado: { $ne: 'Cancelada' } });
     if (choque) {
       return res.status(409).json({ success: false, message: 'Ya tienes una cita a esa hora' });
@@ -115,7 +104,6 @@ async function crear(req, res, next) {
   }
 }
 
-// PUT /api/citas/:id   (médico: reprogramar fecha y hora)
 async function reprogramar(req, res, next) {
   try {
     const cita = await Cita.findById(req.params.id);
@@ -141,7 +129,6 @@ async function reprogramar(req, res, next) {
   }
 }
 
-// PATCH /api/citas/:id/cancelar   (médico, o el paciente dueño de la cita)
 async function cancelar(req, res, next) {
   try {
     const cita = await Cita.findById(req.params.id);
@@ -163,7 +150,6 @@ async function cancelar(req, res, next) {
   }
 }
 
-// DELETE /api/citas/:id   (médico)
 async function eliminar(req, res, next) {
   try {
     const cita = await Cita.findById(req.params.id);

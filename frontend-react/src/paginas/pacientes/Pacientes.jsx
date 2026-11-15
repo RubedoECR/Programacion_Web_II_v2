@@ -59,7 +59,6 @@ export default function Pacientes() {
   const [filtroEdad, setFiltroEdad] = useState('Todos');
   const [orden, setOrden] = useState('reciente');
 
-  // Filtrado reactivo de pacientes de MongoDB
   const pacientesFiltrados = pacientes.filter(p => {
     const matchTexto =
       (p.nombre || '').toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -98,7 +97,6 @@ export default function Pacientes() {
         </Link>
 
         <div className="page-layout">
-          {/* Sidebar: Perfil del Doctor */}
           <aside className="sidebar">
             <div className="profile-photo-wrap">
               <img
@@ -160,9 +158,7 @@ export default function Pacientes() {
             </p>
           </aside>
 
-          {/* Main: Búsqueda y Expedientes */}
           <main className="main-content">
-            {/* Buscador y Filtros */}
             <div className="clinical-card search-card">
               <div className="card-title">
                 <span className="icon">🔍</span>
@@ -212,7 +208,6 @@ export default function Pacientes() {
               </div>
             </div>
 
-            {/* Resultados */}
             <div className="clinical-card records-section" style={{ marginTop: 0 }}>
               <div className="records-header">
                 <div className="card-title" style={{ margin: 0 }}>

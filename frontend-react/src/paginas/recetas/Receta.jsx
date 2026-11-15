@@ -6,7 +6,6 @@ import { obtenerReceta, actualizarReceta, eliminarReceta } from '../../api/recet
 import { fechaCorta, nombreCompleto, nombreMedico } from '../../utils/formato';
 import '../../estilos/App.css';
 
-// Receta del API (con médico, paciente y consulta) → datos que pinta la hoja
 function adaptarReceta(r) {
   const c = r.consulta || {};
   const fecha = new Date(r.fecha);
@@ -34,7 +33,7 @@ function adaptarReceta(r) {
 }
 
 export default function Receta() {
-  const { id } = useParams(); // _id de la receta en MongoDB
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [recetaData, setRecetaData] = useState(null);
@@ -58,11 +57,9 @@ export default function Receta() {
     setTimeout(() => setToast({ visible: false, mensaje: '' }), 2400);
   };
 
-  // Para agregar un medicamento a la receta
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevaDosis, setNuevaDosis] = useState('');
 
-  // Se guardan los medicamentos y las indicaciones; los datos clínicos se editan en la consulta
   const guardarCambios = async () => {
     const res = await actualizarReceta(id, { medicamentos: recetaData.medicamentos, indicaciones: recetaData.notas });
     mostrarToast(res.success ? 'Receta guardada.' : res.message);
@@ -130,7 +127,6 @@ export default function Receta() {
       <HeaderClinico />
 
       <div className="clinical-container receta-container">
-        {/* Barra superior de acciones */}
         <div className="receta-toolbar no-print">
           <button
             type="button"
@@ -162,7 +158,6 @@ export default function Receta() {
           </button>
         </div>
 
-        {/* Editar medicamentos (no se imprime) */}
         <div className="clinical-card no-print" style={{ marginBottom: '1rem' }}>
           <strong>Medicamentos de la receta</strong>
           {recetaData.medicamentos.map((m, i) => (
@@ -185,7 +180,6 @@ export default function Receta() {
           <small style={{ color: 'var(--text-muted)' }}>Recuerda presionar «Guardar Receta» para guardar los cambios.</small>
         </div>
 
-        {/* Hoja de Receta Médica Imprimible */}
         <div className="receta-hoja">
           <div className="receta-header">
             <div>
@@ -231,7 +225,6 @@ export default function Receta() {
             </div>
           </div>
 
-          {/* Signos Vitales */}
           <div className="receta-vitals">
             <div>
               <div className="receta-vitals-label">Presión</div>

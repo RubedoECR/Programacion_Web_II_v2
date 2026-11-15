@@ -1,4 +1,3 @@
-// El médico corrige los datos de una consulta ya guardada.
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';
@@ -49,7 +48,6 @@ export default function EditarConsulta() {
     }
 
     const datos = { ...form };
-    // "Gripe, Tos" → ["Gripe", "Tos"]
     datos.diagnosticos = form.diagnosticos.split(',').map((d) => d.trim()).filter((d) => d !== '');
 
     setGuardando(true);
