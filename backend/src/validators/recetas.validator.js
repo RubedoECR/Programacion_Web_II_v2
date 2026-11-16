@@ -1,4 +1,3 @@
-// Validaciones de backend para la tabla de recetas.
 const c = require('./comunes');
 
 function revisarMedicamentos(medicamentos, errores) {
@@ -12,7 +11,6 @@ function revisarMedicamentos(medicamentos, errores) {
   }
 }
 
-// POST /recetas
 function crear(req) {
   const errores = [];
   if (!c.esId(req.body.consulta)) errores.push('La consulta no es válida');
@@ -20,7 +18,6 @@ function crear(req) {
   return errores;
 }
 
-// PUT /recetas/:id
 function actualizar(req) {
   const errores = c.idEnUrl(req);
   revisarMedicamentos(req.body.medicamentos, errores);

@@ -1,10 +1,7 @@
-// Controlador de pacientes (lado del médico).
-// El alta la hace el propio paciente en /api/auth/paciente/registro.
 const Paciente = require('../models/Paciente');
 const Consulta = require('../models/Consulta');
 const Cita = require('../models/Cita');
 
-// Arma el objeto con los campos que se pueden guardar (solo los que vienen en el body)
 function datosDelPaciente(body) {
   const datos = {};
   const campos = ['nombre', 'apellidoP', 'apellidoM', 'fechaNacimiento', 'sexo', 'telefono', 'tipoSangre', 'direccion', 'estado'];
@@ -13,7 +10,6 @@ function datosDelPaciente(body) {
     if (body[campo] !== undefined) datos[campo] = body[campo];
   }
 
-  // Las alergias pueden venir como texto "Polen, Látex" o como lista
   if (body.alergias !== undefined) {
     if (Array.isArray(body.alergias)) {
       datos.alergias = body.alergias;
@@ -22,7 +18,6 @@ function datosDelPaciente(body) {
     }
   }
 
-  // El formulario manda el contacto de emergencia en 3 campos separados
   if (body.contactoNombre !== undefined || body.contactoParentesco !== undefined || body.contactoTelefono !== undefined) {
     datos.contactoEmergencia = {
       nombre: body.contactoNombre || '',
@@ -34,7 +29,6 @@ function datosDelPaciente(body) {
   return datos;
 }
 
-// Genera el siguiente número de expediente: EXP-000001, EXP-000002, ...
 async function siguienteExpediente() {
   const ultimo = await Paciente.findOne().sort({ expediente: -1 });
   let numero = 1;
@@ -44,7 +38,6 @@ async function siguienteExpediente() {
   return 'EXP-' + String(numero).padStart(6, '0');
 }
 
-// GET /api/pacientes?buscar=texto&estado=Activo
 async function listar(req, res, next) {
   try {
     const filtro = {};
@@ -54,7 +47,6 @@ async function listar(req, res, next) {
 
     let pacientes = await Paciente.find(filtro).sort({ expediente: -1 });
 
-    // Búsqueda sencilla por nombre, expediente o teléfono
     if (req.query.buscar) {
       const texto = String(req.query.buscar).toLowerCase();
       pacientes = pacientes.filter(
@@ -71,7 +63,6 @@ async function listar(req, res, next) {
   }
 }
 
-// GET /api/pacientes/:id   (acepta el _id o el expediente)
 async function obtener(req, res, next) {
   try {
     let paciente;
@@ -90,7 +81,6 @@ async function obtener(req, res, next) {
   }
 }
 
-// PUT /api/pacientes/:id
 async function actualizar(req, res, next) {
   try {
     const paciente = await Paciente.findByIdAndUpdate(req.params.id, datosDelPaciente(req.body), {
@@ -107,12 +97,10 @@ async function actualizar(req, res, next) {
   }
 }
 
-// DELETE /api/pacientes/:id
 async function eliminar(req, res, next) {
   try {
     const id = req.params.id;
 
-    // No se borra un paciente con historial clínico
     const tieneConsultas = await Consulta.findOne({ paciente: id });
     if (tieneConsultas) {
       return res.status(409).json({

@@ -1,4 +1,3 @@
-// Modelo: Consulta médica. Colección "consultas".
 const mongoose = require('mongoose');
 
 const consultaSchema = new mongoose.Schema(
@@ -12,7 +11,6 @@ const consultaSchema = new mongoose.Schema(
     categoria: { type: String, trim: true, default: 'General' },
     severidad: { type: String, enum: ['Leve', 'Moderado', 'Grave', 'Crítico'], default: 'Leve' },
 
-    // Signos vitales
     presion: { type: String, trim: true, default: '' },
     frecuencia: { type: Number, min: 20, max: 250 },
     frecuenciaResp: { type: Number, min: 5, max: 80 },
@@ -30,7 +28,6 @@ const consultaSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true, versionKey: false } }
 );
 
-// Permite hacer .populate('receta') para saber qué receta generó la consulta
 consultaSchema.virtual('receta', {
   ref: 'Receta',
   localField: '_id',

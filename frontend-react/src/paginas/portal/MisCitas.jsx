@@ -1,4 +1,3 @@
-// Portal del paciente: lista de sus citas, con opción de cancelar las confirmadas.
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';

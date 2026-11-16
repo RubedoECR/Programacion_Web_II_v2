@@ -1,4 +1,3 @@
-// Validaciones de backend para el catálogo de medicamentos.
 const c = require('./comunes');
 
 const VIAS = ['Oral', 'Sublingual', 'Intramuscular', 'Intravenosa', 'Tópica', 'Inhalada', 'Otra'];

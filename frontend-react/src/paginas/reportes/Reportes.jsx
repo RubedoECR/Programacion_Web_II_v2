@@ -1,6 +1,3 @@
-// Vista de Reportes: usa solo las 6 funciones de src/api/reportes.api.js.
-// El backend ya calcula los reportes; esta página solo los muestra.
-// No se tocó backend ni se agregaron librerías.
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '../../componentes/Navbar';
 import HeaderClinico from '../../componentes/HeaderClinico';
@@ -14,7 +11,6 @@ import {
 } from '../../api/reportes.api';
 import '../../estilos/App.css';
 
-// Fecha local en formato AAAA-MM-DD (sin depender de la zona horaria UTC).
 function aFechaISO(fecha) {
   const anio = fecha.getFullYear();
   const mes = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -27,9 +23,6 @@ function primerDiaDelMes() {
   return aFechaISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
 }
 
-// El backend responde { success, data }; data es un objeto (resumen)
-// o un arreglo (los 5 reportes con rango). Si algo viene distinto,
-// se trata como vacío en vez de romper la página.
 function comoArreglo(dato) {
   if (Array.isArray(dato)) return dato;
   if (dato && Array.isArray(dato.data)) return dato.data;
@@ -50,15 +43,6 @@ export default function Reportes() {
   const [medicamentos, setMedicamentos] = useState([]);
   const [pacientes, setPacientes] = useState([]);
 
-  // Campos exactos del backend (backend/src/controllers/reportes.controller.js):
-  // resumen: { pacientesActivos, citasHoy, consultasMes, consultasMesPropias }
-  // consultas-por-medico: [{ medico, especialidad, totalConsultas, pacientesAtendidos, casosGraves }]
-  // asistencia-citas: [{ medico, total, confirmadas, atendidas, canceladas, porcentajeAsistencia (null si no hay atendidas+canceladas) }]
-  // diagnosticos-frecuentes: [{ diagnostico, veces, pacientesDistintos, mujeres, hombres }]
-  // medicamentos-mas-recetados: [{ nombre, veces, pacientesDistintos, enCatalogo, presentacion }]
-  // pacientes-frecuentes: [{ nombre, expediente, consultas, ultimaVisita }]
-  // Los accesos con ?? son solo defensivos por si un campo viene vacío;
-  // TODO: verificar en la demo en la Dell que cada tabla se llena con datos reales.
   const cargarResumen = useCallback(async () => {
     const res = await obtenerResumen();
     if (res.success) {
@@ -90,8 +74,6 @@ export default function Reportes() {
     setCargando(false);
   }, []);
 
-  // Al montar: el resumen (sin rango, el backend lo ignora) y los 5 reportes
-  // con el rango por defecto (primer día del mes a hoy).
   useEffect(() => {
     let activo = true;
     (async () => {

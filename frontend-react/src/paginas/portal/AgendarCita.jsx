@@ -1,4 +1,3 @@
-// Portal del paciente: agendar una cita eligiendo médico, día y un horario disponible.
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';
@@ -21,7 +20,6 @@ export default function AgendarCita() {
   const [error, setError] = useState('');
   const [citaAgendada, setCitaAgendada] = useState(null);
 
-  // Lista de médicos
   useEffect(() => {
     obtenerDoctores().then((respuesta) => {
       if (respuesta.success) {
@@ -31,7 +29,6 @@ export default function AgendarCita() {
     });
   }, []);
 
-  // Cada vez que cambia el médico o el día, se piden los horarios libres
   useEffect(() => {
     if (medico === '' || fecha === '') return;
     let vigente = true;
@@ -76,7 +73,6 @@ export default function AgendarCita() {
       setCitaAgendada(respuesta.data);
     } else {
       setError(respuesta.message);
-      // El horario pudo haberse ocupado mientras tanto: se vuelve a consultar
       cambiarFecha(fecha);
     }
   }

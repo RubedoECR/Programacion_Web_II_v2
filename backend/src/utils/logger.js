@@ -1,5 +1,3 @@
-// Logger sencillo: escribe en consola y en logs/app.log
-// Cada línea: [fecha] [NIVEL] mensaje {datos}
 const fs = require('fs');
 const path = require('path');
 
@@ -23,7 +21,6 @@ module.exports = {
   info: (mensaje, datos) => escribir('INFO', mensaje, datos),
   warn: (mensaje, datos) => escribir('WARN', mensaje, datos),
   error: (mensaje, datos) => escribir('ERROR', mensaje, datos),
-  // Inicio y término de procesos críticos
   inicio: (proceso, datos) => escribir('INICIO', proceso, datos),
   fin: (proceso, datos) => escribir('FIN', proceso, datos),
 };

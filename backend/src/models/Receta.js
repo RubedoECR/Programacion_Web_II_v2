@@ -1,4 +1,3 @@
-// Modelo: Receta médica. Colección "recetas". Cada consulta genera una receta.
 const mongoose = require('mongoose');
 
 const recetaSchema = new mongoose.Schema(
@@ -11,7 +10,7 @@ const recetaSchema = new mongoose.Schema(
     medicamentos: [
       {
         _id: false,
-        medicamento: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicamento', default: null }, // si viene del catálogo
+        medicamento: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicamento', default: null },
         nombre: { type: String, required: [true, 'El nombre del medicamento es obligatorio'], trim: true },
         dosis: { type: String, trim: true, default: '' },
       },

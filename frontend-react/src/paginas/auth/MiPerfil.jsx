@@ -1,4 +1,3 @@
-// El médico ve y edita sus propios datos, o elimina su cuenta.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../componentes/Navbar';
@@ -35,7 +34,7 @@ export default function MiPerfil() {
     }
 
     const datos = { ...form };
-    if (datos.password === '') delete datos.password; // vacío = no cambiar la contraseña
+    if (datos.password === '') delete datos.password;
 
     const respuesta = await actualizarDoctor(usuario._id, datos);
     if (respuesta.success) {

@@ -1,4 +1,3 @@
-// Rutas de consultas: /api/consultas
 const express = require('express');
 const ctrl = require('../controllers/consultas.controller');
 const v = require('../validators/consultas.validator');

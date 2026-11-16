@@ -9,7 +9,7 @@ import { adaptarPaciente, fechaCorta, nombreMedico } from '../../utils/formato';
 import '../../estilos/App.css';
 
 export default function Historial() {
-  const { id } = useParams(); // _id o expediente
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [paciente, setPaciente] = useState(null);
@@ -22,7 +22,6 @@ export default function Historial() {
     let activo = true;
 
     (async () => {
-      // Se busca exactamente el paciente de la URL; si no existe se muestra "no encontrado"
       const res = await obtenerPaciente(id);
       if (!activo) return;
       if (!res.success) {
@@ -69,10 +68,8 @@ export default function Historial() {
     }
   }
 
-  // Última consulta registrada para signos vitales
   const ultimaConsulta = consultas.length > 0 ? consultas[0] : null;
 
-  // Diagnósticos acumulados en MongoDB
   const todosDiagnosticos = Array.from(new Set(consultas.flatMap(c => c.diagnosticos || [])));
   const todosMedicamentos = recetas.flatMap(r => r.medicamentos || []);
 
@@ -115,7 +112,6 @@ export default function Historial() {
         </Link>
 
         <div className="page-layout">
-          {/* Sidebar Datos Reales del Paciente en MongoDB */}
           <aside className="sidebar">
             <div className="profile-photo-wrap">
               <div
@@ -206,9 +202,7 @@ export default function Historial() {
             </button>
           </aside>
 
-          {/* Contenido Principal: Historial Clínico */}
           <main className="main-content">
-            {/* Signos Vitales de la última consulta */}
             <div className="clinical-card" style={{ marginBottom: '1.5rem' }}>
               <div className="card-title">
                 <span className="icon">🩺</span>
@@ -241,9 +235,7 @@ export default function Historial() {
               )}
             </div>
 
-            {/* Línea de Tiempo y Diagnósticos */}
             <div className="history-grid">
-              {/* Línea de tiempo de consultas desde MongoDB Atlas */}
               <div className="clinical-card">
                 <div className="card-title">
                   <span className="icon">🕒</span>
@@ -290,7 +282,6 @@ export default function Historial() {
                 )}
               </div>
 
-              {/* Columna derecha: Diagnósticos, Medicamentos y Alergias Reales */}
               <div className="stack">
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>

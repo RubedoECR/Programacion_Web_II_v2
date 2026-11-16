@@ -1,12 +1,9 @@
-/* MediVoz Global Clinical Layout and Component Styles */
-
 .app-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-/* Header principal institucional */
 .institutional-header {
   width: 100%;
   padding: 1.25rem 2rem;
@@ -47,7 +44,6 @@
   font-weight: 500;
 }
 
-/* Contenedor general */
 .clinical-container {
   width: 100%;
   max-width: 1300px;
@@ -66,7 +62,6 @@
   min-width: 0;
 }
 
-/* Sidebar clínica */
 .sidebar {
   width: 290px;
   flex-shrink: 0;
@@ -138,7 +133,6 @@
   word-break: break-word;
 }
 
-/* Status Pill */
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -159,7 +153,6 @@
   background-color: var(--success);
 }
 
-/* Grid & Cards clínicos */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -225,7 +218,6 @@
   cursor: not-allowed;
 }
 
-/* Tag Inputs & List */
 .tag-input-row {
   display: flex;
   gap: 0.5rem;
@@ -293,7 +285,6 @@
   color: var(--error);
 }
 
-/* Checkbox Row */
 .checkbox-row {
   display: flex;
   align-items: center;
@@ -310,7 +301,6 @@
   cursor: pointer;
 }
 
-/* Archivos */
 .file-input-row {
   display: flex;
   gap: 0.5rem;
@@ -350,7 +340,6 @@
   color: var(--text-muted);
 }
 
-/* Mic & Voice Dictation */
 .field-selector {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -439,7 +428,6 @@
   font-weight: 700;
 }
 
-/* Transcripción */
 .live-transcript-box {
   background: #ffffff;
   border: 1.5px dashed var(--border-color);
@@ -466,7 +454,6 @@
   min-height: 36px;
 }
 
-/* Consejos */
 .dictation-tips {
   margin-top: 1.25rem;
   padding: 1rem 1.25rem;
@@ -490,7 +477,6 @@
   margin: 0;
 }
 
-/* Registros Table Section */
 .records-section {
   grid-column: 1 / -1;
   margin-top: 1.5rem;
@@ -578,7 +564,6 @@
   font-size: 0.95rem;
 }
 
-/* Back Link */
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -596,7 +581,6 @@
   text-decoration: underline;
 }
 
-/* Vitals Cards (Historial & Perfil) */
 .vitals-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -625,7 +609,6 @@
   margin-top: 0.3rem;
 }
 
-/* History Timeline */
 .history-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -722,7 +705,6 @@
   font-style: italic;
 }
 
-/* Receta Médica */
 .receta-container {
   max-width: 900px;
 }
@@ -845,7 +827,6 @@
   color: var(--text-muted);
 }
 
-/* Secciones de la hoja de receta */
 .receta-seccion-titulo {
   margin-top: 1.25rem;
   margin-bottom: 0.4rem;
@@ -918,7 +899,6 @@
   text-align: center;
 }
 
-/* Search Card (Perfil) */
 .search-card {
   margin-bottom: 1.5rem;
 }
@@ -935,7 +915,6 @@
   gap: 0.75rem;
 }
 
-/* Toast flotante institucional */
 .toast-notification {
   position: fixed;
   right: 1.5rem;
@@ -968,7 +947,6 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
 }
 
-/* Media queries */
 @media print {
   .no-print { display: none !important; }
   body { background: white !important; }
@@ -1017,12 +995,6 @@
   }
 }
 
-
-/* =========================================
-   NUEVA Y NOTABLE INTERFAZ DE REGISTRO DE CONSULTA
-   ========================================= */
-
-/* Ficha Clínica y Banner del Paciente */
 .patient-summary-banner {
   background: #ffffff;
   border: 1px solid var(--border-color);
@@ -1122,7 +1094,6 @@
   background: #bae6fd;
 }
 
-/* Selector desplegable de pacientes */
 .patient-switch-drawer {
   background: #f8fafc;
   border: 1.5px dashed #cbd5e1;
@@ -1170,7 +1141,6 @@
   margin-top: 0.15rem;
 }
 
-/* Alerta de Alergias en Banner */
 .patient-allergy-alert {
   display: flex;
   align-items: center;
@@ -1193,7 +1163,6 @@
   color: #047857;
 }
 
-/* Barra Inteligente de Dictado por Voz */
 .smart-voice-bar {
   background: #ffffff;
   border: 1.5px solid var(--primary-light);
@@ -1306,7 +1275,6 @@
   text-overflow: ellipsis;
 }
 
-/* Grid de Formulario Clínico */
 .consultation-layout {
   display: grid;
   grid-template-columns: 1fr 310px;
@@ -1341,7 +1309,6 @@
   color: var(--text-muted);
 }
 
-/* Vitals Modern Grid */
 .vitals-inputs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -1368,7 +1335,6 @@
   pointer-events: none;
 }
 
-/* IMC Card Indicator */
 .bmi-widget {
   background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
   border: 1px solid #bbf7d0;
@@ -1420,7 +1386,6 @@
   background: #ef4444;
 }
 
-/* Inputs con Micrófono Incorporado */
 .input-with-inline-mic {
   position: relative;
 }
@@ -1461,7 +1426,6 @@
   animation: pulseMicBtn 1.2s infinite;
 }
 
-/* Chips de Sugerencia Rápida */
 .quick-chips-row {
   display: flex;
   flex-wrap: wrap;
@@ -1491,7 +1455,6 @@
   border-color: #bae6fd;
 }
 
-/* Receta & Prescripción Médica */
 .rx-builder-container {
   background: #f8fafc;
   border: 1px solid var(--border-color);
@@ -1538,7 +1501,6 @@
   margin-top: 0.15rem;
 }
 
-/* Sidebar de Control y Resumen Clínico */
 .consultation-summary-panel {
   position: sticky;
   top: 80px;
@@ -1578,7 +1540,6 @@
   font-size: 0.9rem;
 }
 
-/* Tabs de Consultas Guardadas */
 .consultation-tabs-nav {
   display: flex;
   border-bottom: 1.5px solid var(--border-color);

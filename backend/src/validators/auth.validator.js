@@ -1,8 +1,6 @@
-// Validaciones de backend para login y registro (médicos y pacientes).
 const c = require('./comunes');
 const { revisarDatos } = require('./pacientes.validator');
 
-// POST /auth/medico/login  y  POST /auth/paciente/login
 function login(req) {
   const errores = [];
   if (c.estaVacio(req.body.correo)) errores.push('El correo es obligatorio');
@@ -10,7 +8,6 @@ function login(req) {
   return errores;
 }
 
-// POST /auth/medico/registro
 function registroMedico(req) {
   const datos = req.body;
   const errores = [];
@@ -30,7 +27,6 @@ function registroMedico(req) {
   return errores;
 }
 
-// POST /auth/paciente/registro
 function registroPaciente(req) {
   const datos = req.body;
   const errores = revisarDatos(datos, true);

@@ -1,6 +1,3 @@
-// Middlewares de autenticación.
-//  - verificarToken: revisa el header  Authorization: Bearer <token>
-//  - soloMedico / soloPaciente: dejan pasar solo a un tipo de usuario
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 const Paciente = require('../models/Paciente');
@@ -22,7 +19,6 @@ async function verificarToken(req, res, next) {
     return res.status(401).json({ success: false, message: 'Tu sesión expiró o no es válida, inicia sesión de nuevo' });
   }
 
-  // El usuario del token debe seguir existiendo
   let usuario = null;
   try {
     if (datos.rol === 'medico') {

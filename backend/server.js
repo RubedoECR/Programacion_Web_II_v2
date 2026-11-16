@@ -1,4 +1,3 @@
-// Punto de entrada: carga la configuración, conecta a MongoDB y levanta el servidor.
 require('dotenv').config();
 
 const app = require('./src/app');
@@ -26,7 +25,6 @@ async function iniciar() {
   }
 }
 
-// Excepciones no controladas: se registran en el log antes de terminar
 process.on('unhandledRejection', (razon) => {
   logger.error('Promesa rechazada sin manejar', { error: String(razon) });
 });

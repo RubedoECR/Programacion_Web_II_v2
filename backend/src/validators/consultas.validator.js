@@ -1,9 +1,7 @@
-// Validaciones de backend para la tabla de consultas.
 const c = require('./comunes');
 
 const SEVERIDADES = ['Leve', 'Moderado', 'Grave', 'Crítico'];
 
-// Revisa que un número esté en un rango (si viene vacío no se revisa)
 function revisarNumero(valor, minimo, maximo, etiqueta, errores) {
   if (c.estaVacio(valor)) return;
   const numero = Number(valor);
@@ -25,7 +23,6 @@ function revisarSignos(datos, errores) {
   if (datos.severidad !== undefined && !SEVERIDADES.includes(datos.severidad)) errores.push('Severidad no válida');
 }
 
-// POST /consultas
 function crear(req) {
   const datos = req.body;
   const errores = [];
@@ -50,7 +47,6 @@ function crear(req) {
   return errores;
 }
 
-// PUT /consultas/:id
 function actualizar(req) {
   const errores = c.idEnUrl(req);
   revisarSignos(req.body, errores);

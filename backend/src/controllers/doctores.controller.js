@@ -1,9 +1,7 @@
-// Controlador de médicos (colección usuarios). El alta se hace en /api/auth/medico/registro.
 const Usuario = require('../models/Usuario');
 const Cita = require('../models/Cita');
 const Consulta = require('../models/Consulta');
 
-// GET /api/doctores   (médicos y pacientes: el paciente lo usa para elegir con quién agendar)
 async function listar(req, res, next) {
   try {
     const doctores = await Usuario.find({ activo: { $ne: false } }).sort({ nombre: 1 });
@@ -13,7 +11,6 @@ async function listar(req, res, next) {
   }
 }
 
-// GET /api/doctores/:id
 async function obtener(req, res, next) {
   try {
     const doctor = await Usuario.findById(req.params.id);
@@ -26,7 +23,6 @@ async function obtener(req, res, next) {
   }
 }
 
-// PUT /api/doctores/:id   (solo su propia cuenta)
 async function actualizar(req, res, next) {
   try {
     if (req.params.id !== req.usuario.id) {
@@ -59,7 +55,6 @@ async function actualizar(req, res, next) {
   }
 }
 
-// DELETE /api/doctores/:id   (solo su propia cuenta)
 async function eliminar(req, res, next) {
   try {
     const id = req.params.id;

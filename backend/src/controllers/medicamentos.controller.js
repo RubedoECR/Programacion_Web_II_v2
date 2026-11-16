@@ -1,4 +1,3 @@
-// Controlador del catálogo de medicamentos.
 const Medicamento = require('../models/Medicamento');
 const Receta = require('../models/Receta');
 
@@ -12,7 +11,6 @@ function datosDelMedicamento(body) {
   return datos;
 }
 
-// GET /api/medicamentos?activos=true
 async function listar(req, res, next) {
   try {
     const filtro = {};
@@ -24,7 +22,6 @@ async function listar(req, res, next) {
   }
 }
 
-// GET /api/medicamentos/:id
 async function obtener(req, res, next) {
   try {
     const medicamento = await Medicamento.findById(req.params.id);
@@ -37,7 +34,6 @@ async function obtener(req, res, next) {
   }
 }
 
-// POST /api/medicamentos
 async function crear(req, res, next) {
   try {
     const existe = await Medicamento.findOne({ nombre: req.body.nombre.trim() });
@@ -51,7 +47,6 @@ async function crear(req, res, next) {
   }
 }
 
-// PUT /api/medicamentos/:id
 async function actualizar(req, res, next) {
   try {
     const medicamento = await Medicamento.findByIdAndUpdate(req.params.id, datosDelMedicamento(req.body), {
@@ -67,7 +62,6 @@ async function actualizar(req, res, next) {
   }
 }
 
-// DELETE /api/medicamentos/:id
 async function eliminar(req, res, next) {
   try {
     const usado = await Receta.findOne({ 'medicamentos.medicamento': req.params.id });
