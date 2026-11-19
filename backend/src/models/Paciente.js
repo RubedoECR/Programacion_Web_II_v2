@@ -10,7 +10,7 @@ const pacienteSchema = new mongoose.Schema(
     fechaNacimiento: { type: Date, required: [true, 'La fecha de nacimiento es obligatoria'] },
     sexo: { type: String, enum: ['Masculino', 'Femenino', 'Otro'], required: [true, 'El sexo es obligatorio'] },
     telefono: { type: String, required: [true, 'El teléfono es obligatorio'], trim: true },
-    correo: { type: String, required: [true, 'El correo es obligatorio'], trim: true, lowercase: true },
+    correo: { type: String, required: [true, 'El correo es obligatorio'], unique: true, trim: true, lowercase: true },
     password: { type: String, required: [true, 'La contraseña es obligatoria'] },
     tipoSangre: { type: String, enum: ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], default: '' },
     direccion: { type: String, trim: true, default: '' },

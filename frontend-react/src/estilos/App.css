@@ -845,7 +845,15 @@
   background: #f8fafc;
 }
 
-.receta-seccion-contenido[contenteditable]:focus {
+.receta-notas-input {
+  width: 100%;
+  border: 1px solid transparent;
+  resize: vertical;
+  font-family: inherit;
+  color: inherit;
+}
+
+.receta-notas-input:focus {
   outline: 2px solid var(--primary);
   background: #ffffff;
 }
@@ -952,6 +960,7 @@
   body { background: white !important; }
   .institutional-header, .temp-nav { display: none !important; }
   .receta-hoja { box-shadow: none; border: none; padding: 0; }
+  .receta-notas-input { resize: none; }
   .clinical-container { padding: 0; max-width: 100%; }
 }
 

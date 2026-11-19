@@ -70,6 +70,9 @@ async function crear(req, res, next) {
       if (!cita) {
         return res.status(404).json({ success: false, message: 'Cita no encontrada' });
       }
+      if (String(cita.paciente) !== String(paciente._id)) {
+        return res.status(409).json({ success: false, message: 'La cita no corresponde a ese paciente' });
+      }
       if (cita.estado !== 'Confirmada') {
         return res.status(409).json({ success: false, message: 'La cita ya está ' + cita.estado.toLowerCase() });
       }
@@ -82,20 +85,26 @@ async function crear(req, res, next) {
     datos.imc = calcularImc(datos.peso, datos.talla);
 
     const consulta = await Consulta.create(datos);
+    let receta;
+    try {
+      receta = await Receta.create({
+        consulta: consulta._id,
+        paciente: paciente._id,
+        medico: req.usuario.id,
+        fecha: consulta.fecha,
+        folio: 'REC-' + String(consulta._id).slice(-6).toUpperCase(),
+        medicamentos: req.body.medicamentos || [],
+        indicaciones: req.body.indicaciones || '',
+      });
 
-    const receta = await Receta.create({
-      consulta: consulta._id,
-      paciente: paciente._id,
-      medico: req.usuario.id,
-      fecha: consulta.fecha,
-      folio: 'REC-' + String(consulta._id).slice(-6).toUpperCase(),
-      medicamentos: req.body.medicamentos || [],
-      indicaciones: req.body.indicaciones || '',
-    });
-
-    if (cita) {
-      cita.estado = 'Atendida';
-      await cita.save();
+      if (cita) {
+        cita.estado = 'Atendida';
+        await cita.save();
+      }
+    } catch (error) {
+      if (receta) await Receta.findByIdAndDelete(receta._id);
+      await Consulta.findByIdAndDelete(consulta._id);
+      throw error;
     }
 
     res.status(201).json({

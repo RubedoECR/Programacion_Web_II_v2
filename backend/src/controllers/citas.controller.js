@@ -114,9 +114,23 @@ async function reprogramar(req, res, next) {
       return res.status(409).json({ success: false, message: 'Solo se pueden reprogramar citas confirmadas' });
     }
 
-    const libres = await horariosLibres(cita.medico, req.body.fecha);
-    if (!libres.includes(req.body.hora)) {
-      return res.status(409).json({ success: false, message: 'Ese horario no está disponible' });
+    const cambiaHorario = cita.fecha !== req.body.fecha || cita.hora !== req.body.hora;
+    if (cambiaHorario) {
+      const libres = await horariosLibres(cita.medico, req.body.fecha);
+      if (!libres.includes(req.body.hora)) {
+        return res.status(409).json({ success: false, message: 'Ese horario no está disponible' });
+      }
+
+      const choquePaciente = await Cita.findOne({
+        _id: { $ne: cita._id },
+        paciente: cita.paciente,
+        fecha: req.body.fecha,
+        hora: req.body.hora,
+        estado: { $ne: 'Cancelada' },
+      });
+      if (choquePaciente) {
+        return res.status(409).json({ success: false, message: 'El paciente ya tiene una cita a esa hora' });
+      }
     }
 
     cita.fecha = req.body.fecha;

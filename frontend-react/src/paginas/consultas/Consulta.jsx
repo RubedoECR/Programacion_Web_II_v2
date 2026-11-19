@@ -104,8 +104,7 @@ export default function Consulta() {
   const [nuevaAlergia, setNuevaAlergia] = useState('');
   const [sinAlergias, setSinAlergias] = useState(false);
 
-  const [archivos, setArchivos] = useState([]);
-
+  const [guardando, setGuardando] = useState(false);
   const [toast, setToast] = useState({ mensaje: '', tipo: '', visible: false });
   const [campoInvalido, setCampoInvalido] = useState('');
 
@@ -201,6 +200,10 @@ export default function Consulta() {
     }
     setEscuchando(false);
   };
+
+  useEffect(() => {
+    return () => detenerMic();
+  }, []);
 
   const iniciarDictadoEnCampo = async (campoNombre) => {
     setCampoActivo(campoNombre);
@@ -338,16 +341,8 @@ export default function Consulta() {
     setAlergias(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const adjuntarArchivo = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const tamanoKb = Math.round(file.size / 1024);
-      setArchivos(prev => [...prev, { nombre: file.name, tamano: `${tamanoKb} KB`, estado: 'Adjunto' }]);
-      e.target.value = '';
-    }
-  };
-
   const guardarRegistroConsulta = async (redireccionarAReceta = false) => {
+    if (guardando) return;
     if (!pacienteActual) {
       mostrarToast('Selecciona un paciente antes de guardar.', 'error');
       return;
@@ -355,27 +350,33 @@ export default function Consulta() {
 
     const fechaConsulta = form.fecha && form.hora ? new Date(`${form.fecha}T${form.hora}`).toISOString() : undefined;
 
-    const res = await guardarConsulta({
-      paciente: pacienteActual._id,
-      cita: citaId,
-      fecha: fechaConsulta,
-      tipoConsulta: form.tipoConsulta,
-      categoria: form.categoria,
-      severidad: form.severidad,
-      presion: form.presion,
-      frecuencia: form.frecuencia,
-      frecuenciaResp: form.frecuenciaResp,
-      saturacionO2: form.saturacionO2,
-      temperatura: form.temperatura,
-      peso: form.peso,
-      talla: form.talla,
-      sintomas: form.sintomas,
-      diagnosticos,
-      medicamentos,
-      alergias: sinAlergias ? ['Sin alergias conocidas'] : alergias,
-      notas: form.notas,
-      indicaciones: form.notas
-    });
+    setGuardando(true);
+    let res;
+    try {
+      res = await guardarConsulta({
+        paciente: pacienteActual._id,
+        cita: citaId,
+        fecha: fechaConsulta,
+        tipoConsulta: form.tipoConsulta,
+        categoria: form.categoria,
+        severidad: form.severidad,
+        presion: form.presion,
+        frecuencia: form.frecuencia,
+        frecuenciaResp: form.frecuenciaResp,
+        saturacionO2: form.saturacionO2,
+        temperatura: form.temperatura,
+        peso: form.peso,
+        talla: form.talla,
+        sintomas: form.sintomas,
+        diagnosticos,
+        medicamentos,
+        alergias: sinAlergias ? ['Sin alergias conocidas'] : alergias,
+        notas: form.notas,
+        indicaciones: form.notas
+      });
+    } finally {
+      setGuardando(false);
+    }
 
     if (!res.success) {
       mostrarToast(res.message || 'No se pudo guardar la consulta.', 'error');
@@ -412,7 +413,6 @@ export default function Consulta() {
     }));
     setDiagnosticos([]);
     setMedicamentos([]);
-    setArchivos([]);
     mostrarToast('Formulario restablecido para nueva consulta.');
   };
 
@@ -1133,38 +1133,6 @@ export default function Consulta() {
                   </div>
                 )}
               </div>
-
-              <hr className="sidebar-divider" style={{ margin: '1rem 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <label style={{ margin: 0, fontWeight: 700 }}>Estudios de Laboratorio e Imagenología</label>
-                <div>
-                  <input type="file" id="archivoInputConsulta" style={{ display: 'none' }} onChange={adjuntarArchivo} />
-                  <label htmlFor="archivoInputConsulta" className="btn-secondary" style={{ padding: '0.3rem 0.75rem', fontSize: '0.78rem', cursor: 'pointer' }}>
-                    📎 Adjuntar Estudio
-                  </label>
-                </div>
-              </div>
-
-              {archivos.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
-                  {archivos.map((f, i) => (
-                    <div key={i} className="file-item" style={{ padding: '0.5rem 0.85rem' }}>
-                      <div>
-                        <span className="file-name" style={{ fontSize: '0.82rem' }}>{f.nombre}</span>
-                        <span className="file-meta" style={{ marginLeft: '0.5rem' }}>({f.tamano || 'PDF'})</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        style={{ padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}
-                        onClick={() => setArchivos(prev => prev.filter((_, idx) => idx !== i))}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </main>
 
@@ -1208,15 +1176,17 @@ export default function Consulta() {
               <button
                 type="button"
                 className="btn-primary"
+                disabled={guardando}
                 style={{ width: '100%', padding: '0.85rem', fontWeight: 700, fontSize: '0.92rem' }}
                 onClick={() => guardarRegistroConsulta(false)}
               >
-                💾 Guardar Consulta
+                {guardando ? 'Guardando...' : '💾 Guardar Consulta'}
               </button>
 
               <button
                 type="button"
                 className="btn-primary"
+                disabled={guardando}
                 style={{
                   width: '100%',
                   padding: '0.85rem',
@@ -1227,7 +1197,7 @@ export default function Consulta() {
                 }}
                 onClick={() => guardarRegistroConsulta(true)}
               >
-                📄 Guardar y Emitir Receta
+                {guardando ? 'Guardando...' : '📄 Guardar y Emitir Receta'}
               </button>
 
               <button
