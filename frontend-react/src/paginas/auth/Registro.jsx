@@ -14,7 +14,7 @@ export default function Registro() {
     telefono: '',
     fechaNacimiento: '',
     correo: '',
-    cedulaNombre: '',
+    cedula: '',
     password: '',
     confirmPassword: ''
   });
@@ -24,7 +24,6 @@ export default function Registro() {
   const [cargando, setCargando] = useState(false);
 
   const toastTimerRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   const mostrarToast = (msg, tipo = 'info') => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -49,14 +48,6 @@ export default function Registro() {
     }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files && e.target.files[0];
-    setFormData((prev) => ({
-      ...prev,
-      cedulaNombre: file ? file.name : ''
-    }));
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -68,7 +59,7 @@ export default function Registro() {
       telefono,
       fechaNacimiento,
       correo,
-      cedulaNombre,
+      cedula,
       password,
       confirmPassword
     } = formData;
@@ -81,7 +72,7 @@ export default function Registro() {
       !telefono.trim() ||
       !fechaNacimiento ||
       !correo.trim() ||
-      !cedulaNombre ||
+      !cedula.trim() ||
       !password.trim() ||
       !confirmPassword.trim()
     ) {
@@ -90,19 +81,18 @@ export default function Registro() {
     }
 
     const fecha = new Date(fechaNacimiento);
-    const fechaLimite = new Date('2002-01-01');
-
-    if (fecha > fechaLimite) {
-      mostrarToast('La fecha de nacimiento no puede ser posterior al 1 de enero de 2002.', 'error');
-      marcarCampoInvalido('fechaNacimiento');
-      return;
-    }
-
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
     if (fecha > hoy) {
       mostrarToast('La fecha de nacimiento no puede ser futura.', 'error');
+      marcarCampoInvalido('fechaNacimiento');
+      return;
+    }
+
+    const fechaLimite = new Date('2002-01-01');
+    if (fecha > fechaLimite) {
+      mostrarToast('La fecha de nacimiento no puede ser posterior al 1 de enero de 2002.', 'error');
       marcarCampoInvalido('fechaNacimiento');
       return;
     }
@@ -140,7 +130,7 @@ export default function Registro() {
         telefono: numeroLimpio,
         fechaNacimiento,
         email: correo.trim(),
-        cedula: cedulaNombre,
+        cedula: cedula.trim(),
         password
       };
 
@@ -267,14 +257,15 @@ export default function Registro() {
             </div>
 
             <div className="Campo">
-              <label htmlFor="Cedula">Cargar Cedula</label>
+              <label htmlFor="Cedula">Cédula profesional</label>
               <input
                 id="Cedula"
                 name="cedula"
-                ref={fileInputRef}
-                className={`fileup ${invalidField === 'cedula' ? 'campo-invalido' : ''}`}
-                type="file"
-                onChange={handleFileChange}
+                className={`Text-box ${invalidField === 'cedula' ? 'campo-invalido' : ''}`}
+                type="text"
+                placeholder="Ej. CED-8492018"
+                value={formData.cedula}
+                onChange={handleChange}
               />
             </div>
 

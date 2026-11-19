@@ -2,12 +2,12 @@ const Consulta = require('../models/Consulta');
 const Cita = require('../models/Cita');
 const Receta = require('../models/Receta');
 const Paciente = require('../models/Paciente');
-const { fechaDeHoy } = require('../utils/horarios');
+const { fechaDeHoy, fechaEnZona } = require('../utils/horarios');
 
 function rangoFechas(query, campo = 'fecha') {
   const rango = {};
-  if (query.desde) rango.$gte = new Date(`${query.desde}T00:00:00`);
-  if (query.hasta) rango.$lte = new Date(`${query.hasta}T23:59:59`);
+  if (query.desde) rango.$gte = fechaEnZona(query.desde, false);
+  if (query.hasta) rango.$lte = fechaEnZona(query.hasta, true);
   return Object.keys(rango).length ? { [campo]: rango } : {};
 }
 
@@ -184,9 +184,7 @@ async function pacientesFrecuentes(req, res, next) {
 async function resumen(req, res, next) {
   try {
     const hoy = fechaDeHoy();
-    const inicioMes = new Date();
-    inicioMes.setDate(1);
-    inicioMes.setHours(0, 0, 0, 0);
+    const inicioMes = fechaEnZona(hoy.slice(0, 8) + '01', false);
 
     const [pacientesActivos, citasHoy, consultasMes, consultasMesPropias] = await Promise.all([
       Paciente.countDocuments({ estado: 'Activo' }),

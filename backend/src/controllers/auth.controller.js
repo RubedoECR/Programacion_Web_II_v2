@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 const Paciente = require('../models/Paciente');
 const logger = require('../utils/logger');
+const { hashPassword, verificarPassword, esHash } = require('../utils/password');
 const { datosDelPaciente, siguienteExpediente } = require('./pacientes.controller');
 
 function generarToken(id, rol) {
@@ -15,9 +16,14 @@ async function loginMedico(req, res, next) {
     const correo = req.body.correo.trim().toLowerCase();
     const medico = await Usuario.findOne({ email: correo });
 
-    if (!medico || medico.password !== req.body.password || medico.activo === false) {
+    if (!medico || !verificarPassword(req.body.password, medico.password) || medico.activo === false) {
       logger.warn('Login de médico fallido', { correo: correo });
       return res.status(401).json({ success: false, message: 'Correo o contraseña incorrectos' });
+    }
+
+    if (!esHash(medico.password)) {
+      medico.password = hashPassword(req.body.password);
+      await medico.save();
     }
 
     logger.info('Inicio de sesión de médico', { id: String(medico._id) });
@@ -36,12 +42,17 @@ async function loginPaciente(req, res, next) {
     const correo = req.body.correo.trim().toLowerCase();
     const paciente = await Paciente.findOne({ correo: correo });
 
-    if (!paciente || paciente.password !== req.body.password) {
+    if (!paciente || !verificarPassword(req.body.password, paciente.password)) {
       logger.warn('Login de paciente fallido', { correo: correo });
       return res.status(401).json({ success: false, message: 'Correo o contraseña incorrectos' });
     }
     if (paciente.estado === 'Inactivo') {
       return res.status(403).json({ success: false, message: 'Tu cuenta está inactiva, comunícate con la clínica' });
+    }
+
+    if (!esHash(paciente.password)) {
+      paciente.password = hashPassword(req.body.password);
+      await paciente.save();
     }
 
     logger.info('Inicio de sesión de paciente', { id: String(paciente._id) });
@@ -69,7 +80,7 @@ async function registroMedico(req, res, next) {
       apellidoP: req.body.apellidoP,
       apellidoM: req.body.apellidoM,
       email: email,
-      password: req.body.password,
+      password: hashPassword(req.body.password),
       especialidad: req.body.especialidad,
       cedula: req.body.cedula,
       telefono: req.body.telefono,
@@ -93,11 +104,23 @@ async function registroPaciente(req, res, next) {
 
     const datos = datosDelPaciente(req.body);
     datos.correo = correo;
-    datos.password = req.body.password;
-    datos.expediente = await siguienteExpediente();
+    datos.password = hashPassword(req.body.password);
 
-    const paciente = await Paciente.create(datos);
-    res.status(201).json({ success: true, message: 'Cuenta creada exitosamente', data: paciente });
+    for (let intento = 0; intento < 3; intento++) {
+      datos.expediente = await siguienteExpediente();
+      try {
+        const paciente = await Paciente.create(datos);
+        return res.status(201).json({ success: true, message: 'Cuenta creada exitosamente', data: paciente });
+      } catch (error) {
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.expediente && intento < 2) {
+          continue;
+        }
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.correo) {
+          return res.status(409).json({ success: false, message: 'Ese correo ya está registrado' });
+        }
+        throw error;
+      }
+    }
   } catch (error) {
     next(error);
   }

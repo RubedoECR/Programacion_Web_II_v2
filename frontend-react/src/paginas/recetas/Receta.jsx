@@ -288,14 +288,13 @@ export default function Receta() {
           </div>
 
           <div className="receta-seccion-titulo">Indicaciones y Cuidados Generales</div>
-          <div
-            className="receta-seccion-contenido"
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={(e) => handleTextoChange('notas', e.target.innerText)}
-          >
-            {recetaData.notas || 'Sin indicaciones adicionales registradas.'}
-          </div>
+          <textarea
+            className="receta-seccion-contenido receta-notas-input"
+            rows={3}
+            placeholder="Sin indicaciones adicionales registradas."
+            value={recetaData.notas}
+            onChange={(e) => handleTextoChange('notas', e.target.value)}
+          />
 
           <div className="receta-footer">
             <div className="receta-firma-linea"></div>

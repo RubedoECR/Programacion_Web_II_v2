@@ -12,4 +12,8 @@ const citaSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const CITA_ACTIVA = { estado: { $in: ['Confirmada', 'Atendida'] } };
+citaSchema.index({ medico: 1, fecha: 1, hora: 1 }, { unique: true, partialFilterExpression: CITA_ACTIVA });
+citaSchema.index({ paciente: 1, fecha: 1, hora: 1 }, { unique: true, partialFilterExpression: CITA_ACTIVA });
+
 module.exports = mongoose.model('Cita', citaSchema, 'citas');

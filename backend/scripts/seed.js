@@ -7,6 +7,7 @@ const Medicamento = require('../src/models/Medicamento');
 const Cita = require('../src/models/Cita');
 const Consulta = require('../src/models/Consulta');
 const Receta = require('../src/models/Receta');
+const { hashPassword } = require('../src/utils/password');
 
 const BORRAR_TODO = process.argv.includes('--reset');
 
@@ -60,7 +61,7 @@ async function main() {
   const medicos = [];
   for (const datos of MEDICOS) {
     let medico = await Usuario.findOne({ email: datos.email });
-    if (!medico) medico = await Usuario.create(datos);
+    if (!medico) medico = await Usuario.create({ ...datos, password: hashPassword(datos.password) });
     medicos.push(medico);
   }
 
@@ -68,7 +69,7 @@ async function main() {
   for (const datos of PACIENTES) {
     let paciente = await Paciente.findOne({ correo: datos.correo });
     if (!paciente && !(await Paciente.findOne({ expediente: datos.expediente }))) {
-      paciente = await Paciente.create(datos);
+      paciente = await Paciente.create({ ...datos, password: hashPassword(datos.password) });
     }
     if (paciente) pacientes.push(paciente);
   }
