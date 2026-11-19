@@ -105,10 +105,22 @@ async function registroPaciente(req, res, next) {
     const datos = datosDelPaciente(req.body);
     datos.correo = correo;
     datos.password = hashPassword(req.body.password);
-    datos.expediente = await siguienteExpediente();
 
-    const paciente = await Paciente.create(datos);
-    res.status(201).json({ success: true, message: 'Cuenta creada exitosamente', data: paciente });
+    for (let intento = 0; intento < 3; intento++) {
+      datos.expediente = await siguienteExpediente();
+      try {
+        const paciente = await Paciente.create(datos);
+        return res.status(201).json({ success: true, message: 'Cuenta creada exitosamente', data: paciente });
+      } catch (error) {
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.expediente && intento < 2) {
+          continue;
+        }
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.correo) {
+          return res.status(409).json({ success: false, message: 'Ese correo ya está registrado' });
+        }
+        throw error;
+      }
+    }
   } catch (error) {
     next(error);
   }
