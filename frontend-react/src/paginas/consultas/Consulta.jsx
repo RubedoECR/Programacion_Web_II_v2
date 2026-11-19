@@ -353,10 +353,12 @@ export default function Consulta() {
       return;
     }
 
+    const fechaConsulta = form.fecha && form.hora ? new Date(`${form.fecha}T${form.hora}`).toISOString() : undefined;
+
     const res = await guardarConsulta({
       paciente: pacienteActual._id,
       cita: citaId,
-      fecha: `${form.fecha}T${form.hora}`,
+      fecha: fechaConsulta,
       tipoConsulta: form.tipoConsulta,
       categoria: form.categoria,
       severidad: form.severidad,
@@ -381,7 +383,7 @@ export default function Consulta() {
     }
 
     const { consulta, receta } = res.data;
-    setRegistros(prev => [{ ...consulta, receta: { _id: receta._id, folio: receta.folio } }, ...prev]);
+    setRegistros(prev => [{ ...consulta, paciente: pacienteActual, receta: { _id: receta._id, folio: receta.folio } }, ...prev]);
     setCitaId(null);
     mostrarToast('Consulta guardada exitosamente.');
 

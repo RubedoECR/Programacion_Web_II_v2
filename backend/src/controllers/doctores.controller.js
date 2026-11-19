@@ -1,10 +1,15 @@
 const Usuario = require('../models/Usuario');
 const Cita = require('../models/Cita');
 const Consulta = require('../models/Consulta');
+const { hashPassword } = require('../utils/password');
 
 async function listar(req, res, next) {
   try {
-    const doctores = await Usuario.find({ activo: { $ne: false } }).sort({ nombre: 1 });
+    const consulta = Usuario.find({ activo: { $ne: false } }).sort({ nombre: 1 });
+    if (req.usuario.rol === 'paciente') {
+      consulta.select('nombre apellidoP apellidoM especialidad');
+    }
+    const doctores = await consulta;
     res.json({ success: true, data: doctores });
   } catch (error) {
     next(error);
@@ -34,7 +39,7 @@ async function actualizar(req, res, next) {
     for (const campo of campos) {
       if (req.body[campo] !== undefined) cambios[campo] = req.body[campo];
     }
-    if (req.body.password) cambios.password = req.body.password;
+    if (req.body.password) cambios.password = hashPassword(req.body.password);
 
     if (req.body.email) {
       const email = req.body.email.trim().toLowerCase();

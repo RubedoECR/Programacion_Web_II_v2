@@ -33,6 +33,9 @@ async function verificarToken(req, res, next) {
   if (!usuario) {
     return res.status(401).json({ success: false, message: 'La sesión ya no es válida' });
   }
+  if ((datos.rol === 'medico' && usuario.activo === false) || (datos.rol === 'paciente' && usuario.estado === 'Inactivo')) {
+    return res.status(401).json({ success: false, message: 'Tu cuenta está inactiva, comunícate con la clínica' });
+  }
 
   req.usuario = { id: String(usuario._id), rol: datos.rol, nombre: usuario.nombre };
   next();

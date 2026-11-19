@@ -19,12 +19,16 @@ export default function AgendarCita() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [citaAgendada, setCitaAgendada] = useState(null);
+  const [recarga, setRecarga] = useState(0);
 
   useEffect(() => {
     obtenerDoctores().then((respuesta) => {
-      if (respuesta.success) {
+      if (respuesta.success && respuesta.data.length > 0) {
         setDoctores(respuesta.data);
-        if (respuesta.data.length > 0) setMedico(respuesta.data[0]._id);
+        setMedico(respuesta.data[0]._id);
+      } else {
+        setBuscando(false);
+        if (!respuesta.success) setError(respuesta.message);
       }
     });
   }, []);
@@ -37,7 +41,6 @@ export default function AgendarCita() {
       setBuscando(false);
       if (respuesta.success) {
         setHorarios(respuesta.data);
-        setError('');
       } else {
         setHorarios([]);
         setError(respuesta.message);
@@ -46,18 +49,26 @@ export default function AgendarCita() {
     return () => {
       vigente = false;
     };
-  }, [medico, fecha]);
+  }, [medico, fecha, recarga]);
 
   function cambiarMedico(valor) {
     setMedico(valor);
     setHora('');
+    setError('');
     setBuscando(true);
   }
 
   function cambiarFecha(valor) {
     setFecha(valor);
     setHora('');
+    setError('');
     setBuscando(true);
+  }
+
+  function recargarHorarios() {
+    setHora('');
+    setBuscando(true);
+    setRecarga((n) => n + 1);
   }
 
   async function confirmar() {
@@ -73,7 +84,7 @@ export default function AgendarCita() {
       setCitaAgendada(respuesta.data);
     } else {
       setError(respuesta.message);
-      cambiarFecha(fecha);
+      recargarHorarios();
     }
   }
 
@@ -103,7 +114,8 @@ export default function AgendarCita() {
                   onClick={() => {
                     setCitaAgendada(null);
                     setMotivo('');
-                    cambiarFecha(fecha);
+                    setError('');
+                    recargarHorarios();
                   }}
                 >
                   Agendar otra

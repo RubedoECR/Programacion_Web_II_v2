@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { fechaDeHoy } = require('../utils/horarios');
 
 const pacienteSchema = new mongoose.Schema(
   {
@@ -40,12 +41,12 @@ pacienteSchema.virtual('nombreCompleto').get(function () {
 
 pacienteSchema.virtual('edad').get(function () {
   if (!this.fechaNacimiento) return null;
-  const hoy = new Date();
+  const [anioHoy, mesHoy, diaHoy] = fechaDeHoy().split('-').map(Number);
   const nacimiento = new Date(this.fechaNacimiento);
-  let edad = hoy.getFullYear() - nacimiento.getFullYear();
-  const yaCumplio =
-    hoy.getMonth() > nacimiento.getMonth() ||
-    (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() >= nacimiento.getDate());
+  let edad = anioHoy - nacimiento.getUTCFullYear();
+  const mesNac = nacimiento.getUTCMonth() + 1;
+  const diaNac = nacimiento.getUTCDate();
+  const yaCumplio = mesHoy > mesNac || (mesHoy === mesNac && diaHoy >= diaNac);
   if (!yaCumplio) edad = edad - 1;
   return edad;
 });
